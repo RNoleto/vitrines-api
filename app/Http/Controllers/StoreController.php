@@ -23,10 +23,13 @@ class StoreController extends Controller
     {
         $request->validate([
             'name' => 'required|string',
-            'logo' => 'nullable|image',
+            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            // ou: 'logo' => 'nullable|mimetypes:image/jpeg,image/png,image/svg+xml,image/webp',
             'ativo' => 'integer',
             'links' => 'array',
-            'links.*' => 'url',
+            'links.*.icone'   => 'required_with:links|string',
+            'links.*.texto'   => 'required_with:links|string',
+            'links.*.url'     => 'required_with:links|url',
         ]);
 
         $user = auth()->user(); // ou qualquer forma que você recupere o usuário
@@ -44,7 +47,11 @@ class StoreController extends Controller
         ]);
 
         foreach ($request->links ?? [] as $link) {
-            $store->links()->create(['url' => $link]);
+            $store->links()->create([
+                'icone' => $link['icone'],
+                'texto' => $link['texto'],
+                'url' => $link['url'],
+            ]);
         }
 
         return response()->json($store->load('links'), 201);
@@ -55,10 +62,13 @@ class StoreController extends Controller
         $store = Store::findOrFail($id);
         $request->validate([
             'name' => 'string',
-            'logo' => 'nullable|image',
+            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            // ou: 'logo' => 'nullable|mimetypes:image/jpeg,image/png,image/svg+xml,image/webp',
             'ativo' => 'boolean',
             'links' => 'array',
-            'links.*' => 'url',
+            'links.*.icone'   => 'required_with:links|string',
+            'links.*.texto'   => 'required_with:links|string',
+            'links.*.url'     => 'required_with:links|url',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -74,9 +84,17 @@ class StoreController extends Controller
 
         if ($request->has('links')) {
             $store->links()->delete();
-            foreach ($request->links as $link) {
-                $store->links()->create(['url' => $link]);
+            if ($request->has('links')) {
+                $store->links()->delete();
+                foreach ($request->links as $link) {
+                    $store->links()->create([
+                        'icone' => $link['icone'],
+                        'texto' => $link['texto'],
+                        'url' => $link['url'],
+                    ]);
+                }
             }
+            
         }
 
         return response()->json($store->load('links'));
