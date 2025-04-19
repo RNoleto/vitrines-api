@@ -22,3 +22,14 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 
 
 Route::get('/lojas', [StoreController::class, 'publicList']);
+
+
+// Rota para o banco de dados
+Route::get('/db-check', function () {
+    try {
+        \DB::connection()->getPdo();
+        return response()->json(['db' => 'conectado com sucesso']);
+    } catch (\Exception $e) {
+        return response()->json(['erro' => $e->getMessage()], 500);
+    }
+});
