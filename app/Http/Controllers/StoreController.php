@@ -115,4 +115,11 @@ class StoreController extends Controller
 
         return response()->json(['message' => 'Loja excluída com sucesso (soft delete).']);
     }
+
+    public function publicList()
+    {
+        $stores = Store::with('links')->get()->append('logo_url');
+        return response()->json($stores);
+    }
+
 }

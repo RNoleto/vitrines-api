@@ -19,3 +19,6 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::put('/stores/{id}', [StoreController::class, 'update']);
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
 });
+
+
+Route::get('/lojas', [StoreController::class, 'publicList']);
