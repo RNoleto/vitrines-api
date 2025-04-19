@@ -21,4 +21,4 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 });
 
 
-Route::get('/lojas', [StoreController::class, 'publicList']);
+// Route::get('/lojas', [StoreController::class, 'publicList']);
