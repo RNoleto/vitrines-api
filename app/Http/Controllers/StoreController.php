@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Store;
 use App\Models\StoreLink;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,6 +21,16 @@ class StoreController extends Controller
     
         return response()->json($stores);
     }
+    public function minhasLojas(Request $request)
+    {
+        $user = $request->user();  // Obtém o usuário autenticado
+    
+        $lojas = Store::where('user_id', $user->id)
+                      ->where('ativo', 1)
+                      ->get();
+    
+        return response()->json($lojas);
+    }
 
     public function show($id)
     {
@@ -30,6 +41,7 @@ class StoreController extends Controller
     {
         $request->validate([
             'name' => 'required|string',
+            'firebase_uid' => 'required|string|exists:users,firebase_uid',
             'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
             // ou: 'logo' => 'nullable|mimetypes:image/jpeg,image/png,image/svg+xml,image/webp',
             'ativo' => 'integer',
@@ -39,13 +51,14 @@ class StoreController extends Controller
             'links.*.url'     => 'required_with:links|url',
         ]);
 
-        $user = auth()->user(); // ou qualquer forma que você recupere o usuário
-
+        
         // Aplicar somente para usuários com plano free
         // if (Store::where('user_id', $user->id)->exists()) {
-        //     return response()->json(['error' => 'Usuário já possui uma loja.'], 422);
-        // }
-
+            //     return response()->json(['error' => 'Usuário já possui uma loja.'], 422);
+            // }
+            
+        $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
+        
         $logoPath = $request->file('logo')?->store('logos', 'public');
 
         $store = Store::create([

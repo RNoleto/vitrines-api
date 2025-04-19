@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\FirebaseAuthController;
 use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FirebaseAuthenticate;
+use App\Http\Controllers\UserController;
 
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong from API']);
@@ -20,8 +21,16 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
 });
 
+// routes/api.php
+Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
+
 // Rotas públicas de teste
 Route::get('/lojas', [StoreController::class, 'publicList']);
+Route::get('/users', [UserController::class, 'users']);
+
+
+Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
+
 
 
 // Rota para o banco de dados
