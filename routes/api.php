@@ -20,7 +20,7 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
 });
 
-
+// Rotas públicas de teste
 Route::get('/lojas', [StoreController::class, 'publicList']);
 
 
@@ -33,3 +33,9 @@ Route::get('/db-check', function () {
         return response()->json(['erro' => $e->getMessage()], 500);
     }
 });
+
+// Rota teste
+Route::get('/bcrypt-test', function () {
+    return bcrypt('teste123');
+});
+
