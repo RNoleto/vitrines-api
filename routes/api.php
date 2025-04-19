@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\FirebaseAuthController;
 use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ContactStoresController;
 
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong from API']);
@@ -19,6 +20,11 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::post('/stores', [StoreController::class, 'store']);
     Route::put('/stores/{id}', [StoreController::class, 'update']);
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
+});
+
+Route::middleware(FirebaseAuthenticate::class)->group(function(){
+    Route::get('/contacts', [ContactStoresController::class, 'index']);
+    Route::post('/contacts', [ContactStoresController::class, 'store']);
 });
 
 // routes/api.php

@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stores', function (Blueprint $table) {
+        Schema::create('contact_stores', function (Blueprint $table){
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('store_id');
+            $table->string('photo')->nullable();
             $table->string('name');
-            $table->string('logo')->nullable(); // caminho da imagem
+            $table->string('whatsapp')->nullable();
             $table->integer('ativo')->default(1);
             $table->timestamps();
             $table->softDeletes();
-        
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });        
+
+            $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
+        });
     }
 
     /**
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stores');
+        Schema::dropIfExists('contact_stores');
     }
 };
