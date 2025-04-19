@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Auth::class, function () {
             return (new Factory)
                 // ->withServiceAccount(config('firebase.credentials')) //Local
-                ->withServiceAccount(config('FIREBASE_CREDENTIALS'), true) //Production
+                ->withServiceAccount(env('FIREBASE_CREDENTIALS'), true) //Production
                 ->createAuth();
         });
     }
