@@ -11,7 +11,14 @@ class StoreController extends Controller
 {
     public function index()
     {
-        return Store::with('links')->where('ativo', true)->get();
+        $user = auth()->user();
+    
+        $stores = Store::where('user_id', $user->id)
+            ->with('links')
+            ->get()
+            ->append('logo_url'); // <- adiciona a URL completa no retorno
+    
+        return response()->json($stores);
     }
 
     public function show($id)
@@ -34,9 +41,10 @@ class StoreController extends Controller
 
         $user = auth()->user(); // ou qualquer forma que você recupere o usuário
 
-        if (Store::where('user_id', $user->id)->exists()) {
-            return response()->json(['error' => 'Usuário já possui uma loja.'], 422);
-        }
+        // Aplicar somente para usuários com plano free
+        // if (Store::where('user_id', $user->id)->exists()) {
+        //     return response()->json(['error' => 'Usuário já possui uma loja.'], 422);
+        // }
 
         $logoPath = $request->file('logo')?->store('logos', 'public');
 
@@ -54,7 +62,7 @@ class StoreController extends Controller
             ]);
         }
 
-        return response()->json($store->load('links'), 201);
+        return response()->json($store->load('links')->append('logo_url'), 201);
     }
 
     public function update(Request $request, $id)
