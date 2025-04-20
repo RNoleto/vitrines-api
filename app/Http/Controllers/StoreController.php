@@ -43,8 +43,8 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string',
             'firebase_uid' => 'required|string|exists:users,firebase_uid',
-            'logo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
-            // 'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            // 'logo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
+            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
             // ou: 'logo' => 'nullable|mimetypes:image/jpeg,image/png,image/svg+xml,image/webp',
             'ativo' => 'integer',
             'links' => 'array',
