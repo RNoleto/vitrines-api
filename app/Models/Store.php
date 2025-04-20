@@ -26,4 +26,9 @@ class Store extends Model
     {
         return $this->logo ? asset("storage/{$this->logo}") : null;
     }
+    public function contacts()
+    {
+        return $this->hasMany(Contact::class);
+    }
+
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Store;
 use App\Models\User;
+use App\Models\ContactStore;
 
 class ContactStoresController extends Controller
 {
@@ -12,12 +13,20 @@ class ContactStoresController extends Controller
     {
         $user = auth()->user();
 
-        $storeId = $user->store_id;
+        // Pegando a loja do usuário
+        $store = $user->store;
 
-        $contacts = \App\Models\ContactStore::where('store_id', $storeId)->get();
+        // Se a loja existir, buscar os contatos da loja
+        if ($store) {
+            $contacts = ContactStore::all();
 
-        return response()->json($contacts);
+            return response()->json($contacts);
+        }
+
+        return response()->json([]);
     }
+
+
 
     public function store(Request $request)
     {
@@ -34,7 +43,7 @@ class ContactStoresController extends Controller
             $path = $request->file('photo')->store('contacts_photo', 'public');
         }
 
-        $contact = \App\Models\ContactStores::create([
+        $contact = ContactStore::create([
             'store_id' => $request->store_id,
             'name' => $request->name,
             'whatsapp' => $request->whatsapp,
