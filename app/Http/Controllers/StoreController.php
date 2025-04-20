@@ -7,6 +7,7 @@ use App\Models\StoreLink;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class StoreController extends Controller
 {
@@ -42,7 +43,8 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string',
             'firebase_uid' => 'required|string|exists:users,firebase_uid',
-            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
+            // 'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
             // ou: 'logo' => 'nullable|mimetypes:image/jpeg,image/png,image/svg+xml,image/webp',
             'ativo' => 'integer',
             'links' => 'array',
@@ -59,12 +61,21 @@ class StoreController extends Controller
             
         $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
         
-        $logoPath = $request->file('logo')?->store('logos', 'public');
+        // $logoPath = $request->file('logo')?->store('logos', 'public'); //Local Funcionando
+
+        $logoUrl = null;
+        if ($request->hasFile('logo')) {
+            $uploadedFile = $request->file('logo')->getRealPath();
+            $uploaded = Cloudinary::upload($uploadedFile);
+            $logoUrl = $uploaded->getSecurePath(); // URL segura da imagem
+        }
 
         $store = Store::create([
             'user_id' => $user->id,
             'name' => $request->name,
-            'logo' => $logoPath,
+            // 'logo' => $logoPath,
+            'logo' => $logoUrl,
+            'ativo' => $request->ativo ?? 1,
         ]);
 
         foreach ($request->links ?? [] as $link) {
@@ -92,11 +103,15 @@ class StoreController extends Controller
             'links.*.url'     => 'required_with:links|url',
         ]);
 
+        // if ($request->hasFile('logo')) {
+        //     // Remove antiga
+        //     if ($store->logo) Storage::disk('public')->delete($store->logo);
+        //     $store->logo = $request->file('logo')->store('logos', 'public');
+        // }
         if ($request->hasFile('logo')) {
-            // Remove antiga
-            if ($store->logo) Storage::disk('public')->delete($store->logo);
-            $store->logo = $request->file('logo')->store('logos', 'public');
-        }
+            $uploaded = Cloudinary::upload($request->file('logo')->getRealPath());
+            $store->logo = $uploaded->getSecurePath();
+        }       
 
         $store->update([
             'name' => $request->name ?? $store->name,
