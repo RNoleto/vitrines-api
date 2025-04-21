@@ -24,6 +24,12 @@ class Store extends Model
 
     public function getLogoUrlAttribute()
     {
+        // Verifica se a logo já é uma URL completa (do Cloudinary ou outro serviço externo)
+        if (filter_var($this->logo, FILTER_VALIDATE_URL)) {
+            return $this->logo;  // Retorna a URL completa caso seja do Cloudinary
+        }
+
+        // Se não for uma URL completa, então assume que é uma imagem armazenada localmente
         return $this->logo ? asset("storage/{$this->logo}") : null;
     }
     public function contacts()
