@@ -89,7 +89,7 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'string',
             'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
-            'ativo' => 'boolean',
+            'ativo' => 'integer',
             'links' => 'array',
             'links.*.icone' => 'required_with:links|string',
             'links.*.texto' => 'required_with:links|string',
@@ -127,9 +127,10 @@ class StoreController extends Controller
     public function destroy($id)
     {
         $store = Store::findOrFail($id);
-        $store->delete();
+        $store->ativo = 0;
+        $store->save();
 
-        return response()->json(['message' => 'Loja excluída com sucesso (soft delete).']);
+        return response()->json(['message' => 'Loja desativada com sucesso']);
     }
 
     public function publicList()
