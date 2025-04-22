@@ -31,6 +31,7 @@ class ContactStoresController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'user_id' => 'required|exists:users,id',
             'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:255',
             'whatsapp' => 'required|string|max:255',
@@ -44,6 +45,7 @@ class ContactStoresController extends Controller
         }
 
         $contact = ContactStore::create([
+            'user_id' => $request->user_id,
             'store_id' => $request->store_id,
             'name' => $request->name,
             'whatsapp' => $request->whatsapp,

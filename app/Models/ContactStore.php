@@ -9,10 +9,14 @@ class ContactStore extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['store_id', 'photo', 'name', 'whatsapp', 'ativo'];
+    protected $fillable = ['user_id','store_id', 'photo', 'name', 'whatsapp', 'ativo'];
 
     protected $appends = ['photo_url'];
 
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+    
     public function store() {
         return $this->belongsTo(Store::class);
     }
