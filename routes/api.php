@@ -22,7 +22,7 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
 });
 
-// Rotas de lojas
+// Rotas de contatos
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactStoresController::class, 'index']);
     Route::post('/contacts', [ContactStoresController::class, 'store']);

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
+use App\Models\ContactStore;
 
 
 class Store extends Model
@@ -34,7 +36,7 @@ class Store extends Model
     }
     public function contacts()
     {
-        return $this->hasMany(Contact::class);
+        return $this->hasMany(ContactStore::class);
     }
 
 }
