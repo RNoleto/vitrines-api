@@ -14,15 +14,14 @@ class ContactStoresController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $store = $user->store;
-
-        if ($store) {
-            $contacts = ContactStore::where('store_id', $store->id)->get();
-            return response()->json($contacts);
-        }
-
-        return response()->json([]);
+    
+        $contacts = ContactStore::where('user_id', $user->id)
+            ->where('ativo', 1)
+            ->get();
+    
+        return response()->json($contacts);
     }
+
 
     public function show($id)
     {
