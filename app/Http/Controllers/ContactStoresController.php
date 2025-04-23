@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\ContactStore;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use PhpParser\Node\Stmt\TryCatch;
 
 class ContactStoresController extends Controller
 {
@@ -32,21 +34,27 @@ class ContactStoresController extends Controller
             'whatsapp' => 'required|string|max:255',
             'photo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
         ]);
-    
-        $path = null;
-    
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('contacts_photo', 'public');
+
+        $user = auth()->user();
+
+        $photoUrl = null;
+        if($request->hasFile('photo')){
+            try{
+                $uploaded = Cloudinary::uploadApi()->upload($request->file('foto')->getRealPath());
+                $photoUrl = $uploaded['secure_url'];
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
+            }
         }
-    
-        $contact = ContactStore::create([
-            'user_id' => auth()->id(), // aqui
+
+        $contact = $user->contacts()->create([
+            'user_id' => $user->id,
             'store_id' => $request->store_id,
             'name' => $request->name,
             'whatsapp' => $request->whatsapp,
-            'photo' => $path,
+            'photo' => $photoUrl,
         ]);
-    
+
         return response()->json($contact, 201);
     }
 }
