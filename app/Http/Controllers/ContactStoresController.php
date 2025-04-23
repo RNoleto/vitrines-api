@@ -40,7 +40,7 @@ class ContactStoresController extends Controller
         $photoUrl = null;
         if($request->hasFile('photo')){
             try{
-                $uploaded = Cloudinary::uploadApi()->upload($request->file('foto')->getRealPath());
+                $uploaded = Cloudinary::uploadApi()->upload($request->file('photo')->getRealPath());
                 $photoUrl = $uploaded['secure_url'];
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
