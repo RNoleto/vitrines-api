@@ -24,6 +24,21 @@ class ContactStoresController extends Controller
         return response()->json([]);
     }
 
+    public function show($id)
+    {
+        $user = auth()->user();
+
+        $contact = ContactStore::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if(!$contact){
+            return response()->json(['error' => 'Contato não encontrado'], 404);
+        }
+
+        return response()->json($contact);
+    }
+
 
 
     public function store(Request $request)
@@ -56,5 +71,63 @@ class ContactStoresController extends Controller
         ]);
 
         return response()->json($contact, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = auth()->user();
+
+        $contact = ContactStore::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if(!$contact) {
+            return response()->json(['error' => 'Contato não encontrado.'], 404);
+        }
+
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'whatsapp' => 'sometimes|string|max:255',
+            'photo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+        ]);
+
+        if($request->hasFile('photo')){
+            try{
+                $uploaded = Cloudinary::uploadApi()->upload($request->file('photo')->getRealPath());
+                $contact->photo = $uploaded['secure_url'];
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
+            }
+        }
+
+        if($request->has('name')){
+            $contact->name = $request->name;
+        }
+
+        if($request->has('whatsapp')){
+            $contact->whatsapp = $request->whatsapp;
+        }
+
+        $contact->save();
+
+        return response()->json($contact);
+    }
+
+    public function destroy($id)
+    {
+        $user = auth()->user();
+
+        $contact = ContactStore::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if(!$contact){
+            return response()->json(['error' => 'Contato não encontrado.'], 404);
+        }
+
+        $contact->ativo = 0;
+        $contact->save();
+
+        return response()->json(['message' => 'Contato excluído com sucesso.'], 201);
     }
 }
