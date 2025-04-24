@@ -29,6 +29,12 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts/by-store', [ContactStoresController::class, 'contactByStore']);
 });
 
+// Rotas públicas para páginas externas
+Route::get('/public/stores', [StoreController::class, 'publicList']); // já existe
+Route::get('/public/stores/{id}', [StoreController::class, 'publicShow']);
+Route::get('/public/stores/{id}/contacts', [ContactStoresController::class, 'publicByStore']);
+
+
 // routes/api.php
 Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
 
@@ -52,4 +58,3 @@ Route::get('/bcrypt-test', function () {
     return bcrypt('teste123');
 });
 
-    
