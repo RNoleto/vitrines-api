@@ -39,6 +39,13 @@ class StoreController extends Controller
         return Store::with('links')->findOrFail($id);
     }
 
+    public function publicShow($id)
+    {
+        $store = Store::with('links')->where('id', $id)->where('ativo', 1)->firstOrFail();
+        return response()->json($store->append('logo_url'));
+    }
+
+
     public function store(Request $request)
     {
         $request->validate([

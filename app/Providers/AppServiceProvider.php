@@ -11,12 +11,12 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
+    public function register()
     {
         $this->app->singleton(Auth::class, function () {
             return (new Factory)
-                // ->withServiceAccount(config('firebase.credentials')) //Local
-                ->withServiceAccount(env('FIREBASE_CREDENTIALS'), true) //Production
+                ->withServiceAccount(config('firebase.credentials')) //Local
+                // ->withServiceAccount(env('FIREBASE_CREDENTIALS'), true) //Production
                 ->createAuth();
         });
     }
