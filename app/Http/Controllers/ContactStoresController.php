@@ -26,7 +26,28 @@ class ContactStoresController extends Controller
         return response()->json([]);
     }
 
-
+    public function contactByStore(Request $request)
+    {
+        $user = auth()->user();
+    
+        // Valida o ID da loja que o usuário quer filtrar
+        $request->validate([
+            'store_id' => 'required|integer|exists:stores,id',
+        ]);
+    
+        $storeId = $request->input('store_id');
+    
+        // Verifica se a loja pertence ao usuário autenticado
+        $store = $user->stores()->where('id', $storeId)->first();
+    
+        if (!$store) {
+            return response()->json(['message' => 'Loja não encontrada ou não pertence a este usuário.'], 403);
+        }
+    
+        $contacts = ContactStore::where('store_id', $storeId)->get();
+    
+        return response()->json($contacts);
+    }
 
     public function store(Request $request)
     {

@@ -25,14 +25,11 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactStoresController::class, 'index']);
     Route::post('/contacts', [ContactStoresController::class, 'store']);
+    Route::get('/contacts/by-store', [ContactStoresController::class, 'contactByStore']);
 });
 
 // routes/api.php
 Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
-
-// Rotas públicas de teste
-Route::get('/lojas', [StoreController::class, 'publicList']);
-Route::get('/users', [UserController::class, 'users']);
 
 
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
