@@ -39,13 +39,6 @@ class StoreController extends Controller
         return Store::with('links')->findOrFail($id);
     }
 
-    // public function publicShow($id)
-    // {
-    //     $store = Store::with('links')->where('id', $id)->where('ativo', 1)->firstOrFail();
-    //     return response()->json($store->append('logo_url'));
-    // }
-
-
     public function store(Request $request)
     {
         $request->validate([
@@ -140,9 +133,9 @@ class StoreController extends Controller
         return response()->json(['message' => 'Loja desativada com sucesso']);
     }
 
-    // public function publicList()
-    // {
-    //     $stores = Store::with('links')->get()->append('logo_url');
-    //     return response()->json($stores);
-    // }
+    public function publicList()
+    {
+        $stores = Store::with('links')->get()->append('logo_url');
+        return response()->json($stores);
+    }
 }

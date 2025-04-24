@@ -26,19 +26,13 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactStoresController::class, 'index']);
     Route::post('/contacts', [ContactStoresController::class, 'store']);
-    Route::get('/contacts/{id}', [ContactStoresController::class, 'show']);
-    Route::put('/contacts/{id}', [ContactStoresController::class, 'update']);
-    Route::delete('/contacts/{id}', [ContactStoresController::class, 'destroy']);
+    Route::get('/contacts/by-store', [ContactStoresController::class, 'contactByStore']);
 });
-
-// Rotas públicas para usar nas páginas externas no frontend
-// Route::get('/public/stores', [StoreController::class, 'publicList']);
-// Route::get('/public/stores/{id}', [StoreController::class, 'publicShow']);
-// Route::get('/public/stores/{id}/contacts', [ContactStoresController::class, 'publicByStore']);
-
 
 // routes/api.php
 Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
+
+
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
 
 
@@ -58,3 +52,4 @@ Route::get('/bcrypt-test', function () {
     return bcrypt('teste123');
 });
 
+    
