@@ -38,20 +38,20 @@ class ContactStoresController extends Controller
         return response()->json($contact);
     }
 
-    public function publicByStore($storeId)
-    {
-        $store = Store::where('id', $storeId)->where('ativo', 1)->first();
-    
-        if (!$store) {
-            return response()->json(['message' => 'Loja não encontrada.'], 404);
-        }
-    
-        $contacts = ContactStore::where('store_id', $storeId)
-            ->where('ativo', 1)
-            ->get();
-    
-        return response()->json($contacts);
-    }
+    // public function publicByStore($storeId)
+    // {
+    //     $store = Store::where('id', $storeId)->where('ativo', 1)->first();
+
+    //     if (!$store) {
+    //         return response()->json(['message' => 'Loja não encontrada.'], 404);
+    //     }
+
+    //     $contacts = ContactStore::where('store_id', $storeId)
+    //         ->where('ativo', 1)
+    //         ->get();
+
+    //     return response()->json($contacts);
+    // }
 
 
     public function contactByStore(Request $request)
