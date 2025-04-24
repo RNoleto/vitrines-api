@@ -14,24 +14,24 @@ Route::get('/ping', function () {
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
 // Rotas de Cadastro de Lojas
-// Route::middleware(FirebaseAuthenticate::class)->group(function(){
+Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/stores', [StoreController::class, 'index']);
     Route::get('/stores/{id}', [StoreController::class, 'show']);
     Route::post('/stores', [StoreController::class, 'store']);
     Route::put('/stores/{id}', [StoreController::class, 'update']);
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
-// });
+});
 
 // Rotas de contatos
-// Route::middleware(FirebaseAuthenticate::class)->group(function(){
+Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactStoresController::class, 'index']);
     Route::post('/contacts', [ContactStoresController::class, 'store']);
     Route::get('/contacts/{id}', [ContactStoresController::class, 'show']);
     Route::put('/contacts/{id}', [ContactStoresController::class, 'update']);
     Route::delete('/contacts/{id}', [ContactStoresController::class, 'destroy']);
-// });
+});
 
-// Rotas públicas
+// Rotas públicas para usar nas páginas externas no frontend
 Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{id}', [StoreController::class, 'publicShow']);
 Route::get('/public/stores/{id}/contacts', [ContactStoresController::class, 'publicByStore']);
