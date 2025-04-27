@@ -26,6 +26,8 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactStoresController::class, 'index']);
     Route::post('/contacts', [ContactStoresController::class, 'store']);
+    Route::put('/contacts/{id}', [ContactStoresController::class, 'update']);
+    Route::delete('/contacts/{id}', [ContactStoresController::class, 'destroy']);
     Route::get('/contacts/by-store', [ContactStoresController::class, 'contactByStore']);
 });
 
