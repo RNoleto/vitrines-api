@@ -40,7 +40,7 @@ class FirebaseAuthController extends Controller
             $user = User::updateOrCreate(
                 ['firebase_uid' => $userRecord->uid],
                 [
-                    'name' => $request->name ?? $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
+                    'name' => $request->name ?? $userRecord->displayName ?? 'Novo Usuário',
                     'email' => $userRecord->email,
                 ]
             );    
