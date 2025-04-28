@@ -43,12 +43,12 @@ class FirebaseAuthController extends Controller
                     'email' => $userRecord->email,
                 ]
             );
-            $user->save();
-            $user->refresh();
-            
+        
+            $freshUser = User::find($user->id);
+        
             return response()->json([
                 'message' => 'Usuário autenticado com sucesso.',
-                'user' => $user->toArray()
+                'user' => $freshUser->toArray()
             ]);
         
         } catch (\Throwable $e) {
