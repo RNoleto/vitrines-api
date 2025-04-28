@@ -46,7 +46,7 @@ class FirebaseAuthController extends Controller
 
             return response()->json([
                 'message' => 'Usuário autenticado com sucesso.',
-                'user' => $user->fresh(), // Carrega o usuário atualizado do banco
+                'user' => $user->toArray(),
             ]);
         } catch (\Throwable $e) {
             // Log::error('Erro no login Firebase: ' . $e->getMessage());
