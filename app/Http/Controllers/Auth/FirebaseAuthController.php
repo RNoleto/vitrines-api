@@ -27,6 +27,7 @@ class FirebaseAuthController extends Controller
     {
         $request->validate([
             'idToken' => 'required|string',
+            'name' => 'sometimes|string'
         ]);
 
         try {
@@ -39,10 +40,10 @@ class FirebaseAuthController extends Controller
             $user = User::updateOrCreate(
                 ['firebase_uid' => $userRecord->uid],
                 [
-                    'name' => $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
+                    'name' => $request->name ?? $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
                     'email' => $userRecord->email,
                 ]
-            );
+            );    
         
             $freshUser = User::find($user->id);
         
