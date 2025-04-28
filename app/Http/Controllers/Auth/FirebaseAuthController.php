@@ -17,6 +17,12 @@ class FirebaseAuthController extends Controller
         $this->firebaseAuth = $firebaseAuth;
     }
 
+    private function extractNameFromEmail($email)
+    {
+        $namePart = explode('@', $email)[0];
+        return ucfirst(str_replace(['.', '_'], ' ', $namePart)); // Ex: "joao.silva" vira "Joao Silva"
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -33,7 +39,7 @@ class FirebaseAuthController extends Controller
             $user = User::updateOrCreate(
                 ['firebase_uid' => $userRecord->uid],
                 [
-                    'name' => $userRecord->displayName ?? 'Usuário Firebase',
+                    'name' => $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
                     'email' => $userRecord->email,
                 ]
             );
