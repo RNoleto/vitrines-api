@@ -23,6 +23,10 @@ class ContactStore extends Model
 
     public function getPhotoUrlAttribute()
     {
+        if(filter_var($this->photo, FILTER_VALIDATE_URL)) {
+            return $this->photo;  // Retorna a URL completa caso seja do Cloudinary
+        }
+        
         return $this->photo ? asset("storage/{$this->photo}") : null;
     }
 }
