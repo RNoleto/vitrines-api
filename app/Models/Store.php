@@ -12,7 +12,7 @@ class Store extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'name', 'logo', 'ativo'];
+    protected $fillable = ['user_id', 'name', 'logo', 'ativo', 'theme'];
 
     protected $appends = ['logo_url'];
 

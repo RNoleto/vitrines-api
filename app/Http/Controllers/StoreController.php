@@ -50,6 +50,7 @@ class StoreController extends Controller
             'links.*.icone' => 'required_with:links|string',
             'links.*.texto' => 'required_with:links|string',
             'links.*.url'   => 'required_with:links|url',
+            'theme' => 'nullable|string',
         ]);
 
         $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
@@ -69,6 +70,7 @@ class StoreController extends Controller
             'name'    => $request->name,
             'logo'    => $logoUrl,
             'ativo'   => $request->ativo ?? 1,
+            'theme' => $request->theme ?? 'default',
         ]);
 
         foreach ($request->links ?? [] as $link) {
@@ -94,6 +96,7 @@ class StoreController extends Controller
             'links.*.icone' => 'required_with:links|string',
             'links.*.texto' => 'required_with:links|string',
             'links.*.url'   => 'required_with:links|url',
+            'theme' => 'nullable|string',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -108,6 +111,7 @@ class StoreController extends Controller
         $store->update([
             'name'  => $request->name ?? $store->name,
             'ativo' => $request->ativo ?? $store->ativo,
+            'theme' => $request->theme ?? $store->theme
         ]);
 
         if ($request->has('links')) {
@@ -142,8 +146,16 @@ class StoreController extends Controller
 
     public function publicShow($id)
     {
-        $store = Store::with('links')->where('id', $id)->where('ativo', 1)->firstOrFail();
-        return response()->json($store->append('logo_url'));
+        $store = Store::with('links')
+            ->where('id', $id)
+            ->where('ativo', 1)
+            ->firstOrFail()
+            ->append('logo_url');
+
+        return response()->json([
+            ...$store->toArray(),
+            'theme' => $store->theme // Garantir que o theme está sendo enviado
+        ]);
     }
 
 }
