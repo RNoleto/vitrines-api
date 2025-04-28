@@ -15,13 +15,18 @@ class UserController extends Controller
     
     public function buscarPorFirebase($firebase_uid)
     {
-        $user = User::where('firebase_uid', $firebase_uid)->first();
-    
-        if (!$user) {
-            return response()->json(['error' => 'Usuário não encontrado'], 404);
+        try {
+            $user = User::where('firebase_uid', $firebase_uid)
+                ->firstOrFail();
+
+            return response()->json($user);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Usuário não encontrado',
+                'details' => $e->getMessage()
+            ], 404);
         }
-    
-        return response()->json($user);
     }
 
 }
