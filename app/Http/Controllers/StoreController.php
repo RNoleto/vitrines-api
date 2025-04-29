@@ -82,6 +82,19 @@ class StoreController extends Controller
         return response()->json($store->load('links')->append('logo_url'), 201);
     }
 
+    public function updateTheme(Request $request, $id)
+    {
+        $request->validate([
+            'theme' => 'required|string'
+        ]);
+    
+        $store = Store::findOrFail($id);
+        $store->theme = $request->theme;
+        $store->save();
+    
+        return response()->json($store);
+    }
+
     public function update(Request $request, $id)
     {
         $store = Store::findOrFail($id);
