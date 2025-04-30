@@ -179,7 +179,9 @@ class StoreController extends Controller
             ->with(['links', 'contacts']) // Carrega relacionamentos
             ->firstOrFail();
 
-        return response()->json($loja->append('logo_url'));
+        return Store::whereRaw('LOWER(slug) = ?', [strtolower($slug)])
+            ->where('ativo', 1)
+            ->firstOrFail();
     }
 
     private function makeUniqueSlug($slug)
