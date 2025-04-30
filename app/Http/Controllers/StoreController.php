@@ -97,17 +97,17 @@ class StoreController extends Controller
 
     public function updateTheme(Request $request, $id)
     {
+        $request->validate([
+            'theme' => 'required|string|max:50'
+        ]);
+    
         try {
-            $request->validate([
-                'theme' => 'required|string|max:50'
-            ]);
-        
             $store = Store::findOrFail($id);
             $store->update([
                 'theme' => $request->theme
             ]);
         
-            return response()->json($store, 200);
+            return response()->json($store);
             
         } catch (\Exception $e) {
             return response()->json([
