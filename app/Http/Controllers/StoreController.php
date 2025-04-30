@@ -174,13 +174,9 @@ class StoreController extends Controller
 
     public function showBySlug($slug)
     {
-        $loja = Store::where('slug', $slug)
+        return Store::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->where('ativo', 1)
-            ->with(['links', 'contacts']) // Carrega relacionamentos
-            ->firstOrFail();
-
-        return Store::whereRaw('LOWER(slug) = ?', [strtolower($slug)])
-            ->where('ativo', 1)
+            ->with(['links', 'contacts'])
             ->firstOrFail();
     }
 
