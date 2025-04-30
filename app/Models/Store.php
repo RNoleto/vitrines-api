@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 use App\Models\ContactStore;
+use Illuminate\Support\Str;
 
 
 class Store extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'name', 'logo', 'ativo', 'theme'];
+    protected $fillable = ['user_id', 'name', 'slug', 'logo', 'ativo', 'theme'];
 
     protected $appends = ['logo_url'];
 
@@ -39,4 +40,19 @@ class Store extends Model
         return $this->hasMany(ContactStore::class);
     }
 
+    public function getRouteKeyName()
+    {
+        return 'slug'; // Usar slug ao invés de id para binding
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->slug)) {
+                $model->slug = Str::slug($model->name);
+            }
+        });
+    }
 }

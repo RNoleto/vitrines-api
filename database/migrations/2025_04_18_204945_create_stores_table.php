@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('name');
+            $table->string('slug')->unique();
             $table->string('logo')->nullable(); // caminho da imagem
             $table->integer('ativo')->default(1);
             $table->timestamps();

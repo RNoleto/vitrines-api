@@ -7,18 +7,18 @@ use App\Models\StoreLink;
 use App\Models\User;
 use Illuminate\Http\Request;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Str;
 
 class StoreController extends Controller
 {
-    public function index()
+    public function index() 
     {
         $user = auth()->user();
-
         $stores = Store::where('user_id', $user->id)
             ->with('links')
             ->get()
             ->append('logo_url');
-
+    
         return response()->json($stores);
     }
 
@@ -52,34 +52,47 @@ class StoreController extends Controller
             'links.*.url'   => 'required_with:links|url',
         ]);
 
-        $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
+        try {
+            $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
 
-        $logoUrl = null;
-        if ($request->hasFile('logo')) {
-            try {
-                $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
-                $logoUrl = $uploaded['secure_url'];
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
-            }
-        }
+            $logoUrl = null;
+            if ($request->hasFile('logo')) {
+                try {
+                    $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
+                    $logoUrl = $uploaded['secure_url'];
+                } catch (\Exception $e) {
+                    return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
+                }
+            }          
 
-        $store = Store::create([
-            'user_id' => $user->id,
-            'name'    => $request->name,
-            'logo'    => $logoUrl,
-            'ativo'   => $request->ativo ?? 1,
-        ]);
-
-        foreach ($request->links ?? [] as $link) {
-            $store->links()->create([
-                'icone' => $link['icone'],
-                'texto' => $link['texto'],
-                'url'   => $link['url'],
+            $baseSlug = Str::slug($request->name, '-', 'pr_BR');
+            $slug = !empty($baseSlug) ? $baseSlug : 'loja-sem-nome';
+            $slug = $this->makeUniqueSlug($slug);
+    
+            $store = Store::create([
+                'user_id' => $user->id,
+                'name'    => $request->name,
+                'slug'    => $slug,
+                'logo'    => $logoUrl,
+                'ativo'   => $request->ativo ?? 1,
             ]);
+
+            foreach ($request->links ?? [] as $link) {
+                $store->links()->create([
+                    'icone' => $link['icone'],
+                    'texto' => $link['texto'],
+                    'url'   => $link['url'],
+                ]);
+            }
+
+            return response()->json($store->load('links')->append('logo_url'), 201);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erro interno:' . $e->getMessage()
+            ], 500);
         }
 
-        return response()->json($store->load('links')->append('logo_url'), 201);
     }
 
     public function updateTheme(Request $request, $id)
@@ -157,6 +170,23 @@ class StoreController extends Controller
     {
         $store = Store::with('links')->where('id', $id)->where('ativo', 1)->firstOrFail();
         return response()->json($store->append('logo_url'));
+    }
+
+    public function showBySlug($slug) 
+    {
+        return Store::where('slug', $slug)->firstOrFail();
+    }
+
+    private function makeUniqueSlug($slug)
+    {
+        $original = $slug;
+        $count = 1;
+
+        while (Store::where('slug', $slug)->exists()) {
+            $slug = $original . '-' . $count++;
+        }
+
+        return $slug;
     }
 
 }
