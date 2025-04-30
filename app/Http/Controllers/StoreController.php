@@ -172,9 +172,11 @@ class StoreController extends Controller
         return response()->json($store->append('logo_url'));
     }
 
-    public function showBySlug($slug) 
+    public function showBySlug($slug)
     {
-        return Store::where('slug', $slug)->firstOrFail();
+        return Store::where('slug', $slug)
+            ->where('ativo', 1) // Garantir que a loja está ativa
+            ->firstOrFail(); // ← Não usar with('links') se não estiver definido
     }
 
     private function makeUniqueSlug($slug)
