@@ -97,15 +97,23 @@ class StoreController extends Controller
 
     public function updateTheme(Request $request, $id)
     {
-        $request->validate([
-            'theme' => 'required|string'
-        ]);
-    
-        $store = Store::findOrFail($id);
-        $store->theme = $request->theme;
-        $store->save();
-    
-        return response()->json($store);
+        try {
+            $request->validate([
+                'theme' => 'required|string|max:50'
+            ]);
+        
+            $store = Store::findOrFail($id);
+            $store->update([
+                'theme' => $request->theme
+            ]);
+        
+            return response()->json($store, 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erro ao atualizar tema: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
