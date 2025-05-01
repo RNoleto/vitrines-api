@@ -5,7 +5,7 @@ use App\Http\Controllers\Auth\FirebaseAuthController;
 use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ContactStoresController;
+use App\Http\Controllers\ContactController;
 
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong from API']);
@@ -25,16 +25,17 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 
 // Rotas de contatos
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
-    Route::get('/contacts', [ContactStoresController::class, 'index']);
-    Route::post('/contacts', [ContactStoresController::class, 'store']);
-    Route::get('/contacts/by-store', [ContactStoresController::class, 'contactByStore']);
+    Route::get('/contacts', [ContactController::class, 'index']);
+    Route::post('/contacts', [ContactController::class, 'store']);
+    Route::get('/contacts/by-store', [ContactController::class, 'contactByStore']);
+    Route::post('/contacts/link', [ContactController::class, 'linkToStore']);
 });
 
 // Rotas públicas para páginas externas
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
 Route::get('/public/stores', [StoreController::class, 'publicList']); // já existe
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
-Route::get('/public/stores/{id}/contacts', [ContactStoresController::class, 'publicByStore']);
+Route::get('/public/stores/{id}/contacts', [ContactController::class, 'publicByStore']);
 
 
 // routes/api.php

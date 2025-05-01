@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ContactStore extends Model
+class Contact extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id','store_id', 'photo', 'name', 'whatsapp', 'ativo'];
+    protected $fillable = ['user_id', 'photo', 'name', 'whatsapp', 'ativo'];
 
     protected $appends = ['photo_url'];
 
@@ -17,8 +17,11 @@ class ContactStore extends Model
         return $this->belongsTo(User::class);
     }
     
-    public function store() {
-        return $this->belongsTo(Store::class);
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class, 'contact_store')
+            ->withTimestamps()
+            ->withPivot('ativo');
     }
 
     public function getPhotoUrlAttribute()

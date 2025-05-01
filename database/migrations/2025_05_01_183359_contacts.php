@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('contact_stores', function (Blueprint $table){
+        Schema::create('contacts', function (Blueprint $table){
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->unsignedBigInteger('store_id');
             $table->string('photo')->nullable();
             $table->string('name');
             $table->string('whatsapp')->nullable();
@@ -24,7 +23,7 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('store_id')->references('id')->on('stores')->onDelete('cascade');
+            $table->unique(['user_id', 'whatsapp']);
         });
     }
 
@@ -33,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contact_stores');
+        Schema::dropIfExists('contacts');
     }
 };

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use App\Models\ContactStore;
+use App\Models\Contact;
 use Illuminate\Support\Str;
 
 
@@ -37,7 +37,7 @@ class Store extends Model
     }
     public function contacts()
     {
-        return $this->hasMany(ContactStore::class);
+        return $this->belongsToMany(Contact::class)->withTimestamps();
     }
 
     public function getRouteKeyName()

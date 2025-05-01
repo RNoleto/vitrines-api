@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Store;
 use App\Models\User;
-use App\Models\ContactStore;
+use App\Models\Contact;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use PhpParser\Node\Stmt\TryCatch;
 
-class ContactStoresController extends Controller
+class ContactController extends Controller
 {
     public function index()
     {
@@ -27,7 +27,7 @@ class ContactStoresController extends Controller
     {
         $user = auth()->user();
 
-        $contact = ContactStore::where('id', $id)
+        $contact = Contact::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -56,48 +56,80 @@ class ContactStoresController extends Controller
             return response()->json(['message' => 'Loja não encontrada ou não pertence a este usuário.'], 403);
         }
     
-        $contacts = ContactStore::where('store_id', $storeId)->get();
+        $contacts = Contact::where('store_id', $storeId)->get();
     
         return response()->json($contacts);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'store_id' => 'required|exists:stores,id',
-            'name' => 'required|string|max:255',
-            'whatsapp' => 'required|string|max:255',
-            'photo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        $user = auth()->user();
+            $request->validate([
+                'store_ids' => 'required|array|min:1',
+                'store_ids.*' => 'exists:stores,id',
+                'name' => 'required|string|max:255',
+                'whatsapp' => 'required|string|max:20',
+                'photo' => 'nullable|image|max:2048',
+            ]);
 
-        $photoUrl = null;
-        if($request->hasFile('photo')){
-            try{
-                $uploaded = Cloudinary::uploadApi()->upload($request->file('photo')->getRealPath());
-                $photoUrl = $uploaded['secure_url'];
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
+            $user = auth()->user();
+
+            // Verifica se as lojas pertencem ao usuário
+            $invalidStores = array_diff(
+                $request->store_ids,
+                $user->stores()->pluck('id')->toArray()
+            );
+
+            if (!empty($invalidStores)) {
+                return response()->json([
+                    'error' => 'Algumas lojas não pertencem a este usuário'
+                ], 403);
             }
+
+            // Upload da foto
+            $photoUrl = null;
+            if ($request->hasFile('photo')) {
+                try {
+                    $uploaded = Cloudinary::uploadApi()->upload(
+                        $request->file('photo')->getRealPath(),
+                        ['folder' => 'contacts']
+                    );
+                    $photoUrl = $uploaded['secure_url'];
+                } catch (\Exception $e) {
+                    \Log::error('Cloudinary error: ' . $e->getMessage());
+                    return response()->json(['error' => 'Erro no upload da imagem'], 500);
+                }
+            }
+
+            // Cria o contato
+            $contact = $user->contacts()->create([
+                'name' => $request->name,
+                'whatsapp' => $request->whatsapp,
+                'photo' => $photoUrl,
+            ]);
+
+            // Vincula as lojas
+            $contact->stores()->sync($request->store_ids);
+            $contact->stores()->sync($request->store_ids, ['ativo' => 1]);
+
+            \DB::commit();
+
+            return response()->json($contact->load('stores'), 201);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Contact store error: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro interno no servidor'], 500);
         }
-
-        $contact = $user->contacts()->create([
-            'user_id' => $user->id,
-            'store_id' => $request->store_id,
-            'name' => $request->name,
-            'whatsapp' => $request->whatsapp,
-            'photo' => $photoUrl,
-        ]);
-
-        return response()->json($contact, 201);
     }
 
     public function update(Request $request, $id)
     {
         $user = auth()->user();
 
-        $contact = ContactStore::where('id', $id)
+        $contact = Contact::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -137,7 +169,7 @@ class ContactStoresController extends Controller
     {
         $user = auth()->user();
 
-        $contact = ContactStore::where('id', $id)
+        $contact = Contact::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -160,11 +192,39 @@ class ContactStoresController extends Controller
             return response()->json(['message' => 'Loja não encontrada.'], 404);
         }
 
-        $contacts = ContactStore::where('store_id', $storeId)
+        $contacts = Contact::where('store_id', $storeId)
             ->where('ativo', 1)
             ->get();
 
         return response()->json($contacts);
+    }
+
+    public function linkToStore(Request $request)
+    {
+        $request->validate([
+            'whatsapp' => 'required',
+            'store_id' => 'required|exists:stores,id'
+        ]);
+
+        $user = auth()->user();
+        $store = Store::findOrFail($request->store_id);
+
+        // Verifica se o contato já existe para este usuário
+        $contact = Contact::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'whatsapp' => $request->whatsapp
+            ],
+            [
+                'name' => $request->name,
+                'photo' => $request->photo
+            ]
+        );
+
+        // Associa à loja (evita duplicata na relação)
+        $store->contacts()->syncWithoutDetaching([$contact->id]);
+
+        return response()->json(['message' => 'Contato vinculado com sucesso!']);
     }
 
 }

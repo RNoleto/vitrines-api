@@ -27,7 +27,9 @@ class FirebaseAuthController extends Controller
     {
         $request->validate([
             'idToken' => 'required|string',
-            'name' => 'sometimes|string'
+            'name' => 'sometimes|string',
+            'store_ids' => 'sometimes|array',
+            'store_ids.*' => 'exists:stores,id'
         ]);
     
         try {
@@ -46,11 +48,31 @@ class FirebaseAuthController extends Controller
                     'email' => $userRecord->email,
                 ]);
             }
-        
+
             return response()->json([
                 'message' => 'Operação realizada com sucesso',
                 'user' => $user->fresh()->toArray()
             ]);
+
+            // Cria/atualiza o contato
+            $contact = Contact::updateOrCreate(
+                ['whatsapp' => $userRecord->phoneNumber ?? $request->whatsapp],
+                [
+                    'user_id' => $user->id,
+                    'name' => $request->name,
+                    'photo' => $request->photo_path
+                ]
+            );
+
+            // Sincroniza as lojas
+            if ($request->has('store_ids')) {
+                $contact->stores()->sync($request->store_ids);
+            }
+
+            return response()->json([
+                'message' => 'Contato criado/atualizado com sucesso',
+                'contact' => $contact->load('stores')
+            ]);     
         
         } catch (\Throwable $e) {
             Log::error('Erro na operação Firebase: ' . $e->getMessage());
