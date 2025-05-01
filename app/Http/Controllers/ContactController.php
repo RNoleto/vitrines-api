@@ -190,14 +190,16 @@ class ContactController extends Controller
         $store = Store::where('id', $storeId)
             ->where('ativo', 1)
             ->with(['contacts' => function($query) {
-                $query->where('ativo', 1);
+                $query->where('contacts.ativo', 1)
+                      ->wherePivot('ativo', 1)
+                      ->with('stores'); // Carrega as lojas do contato
             }])
             ->first();
-
+        
         if (!$store) {
-            return response()->json(['message' => 'Loja não encontrada.'], 404);
+            return response()->json(['message' => 'Loja não encontrada'], 404);
         }
-
+    
         return response()->json($store->contacts);
     }
 
