@@ -35,9 +35,12 @@ class Store extends Model
         // Se não for uma URL completa, então assume que é uma imagem armazenada localmente
         return $this->logo ? asset("storage/{$this->logo}") : null;
     }
+
     public function contacts()
     {
-        return $this->belongsToMany(Contact::class)->withTimestamps();
+        return $this->belongsToMany(Contact::class, 'contact_store')
+            ->withPivot('ativo')
+            ->wherePivot('ativo', 1);
     }
 
     public function getRouteKeyName()

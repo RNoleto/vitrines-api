@@ -15,8 +15,9 @@ class ContactController extends Controller
     {
         $user = auth()->user();
     
-        $contacts = ContactStore::where('user_id', $user->id)
+        $contacts = Contact::where('user_id', $user->id)
             ->where('ativo', 1)
+            ->with('stores')
             ->get();
     
         return response()->json($contacts);
@@ -186,17 +187,18 @@ class ContactController extends Controller
     // Rotas Publicas para usar nas páginas externas sem autenticação
     public function publicByStore($storeId)
     {
-        $store = Store::where('id', $storeId)->where('ativo', 1)->first();
+        $store = Store::where('id', $storeId)
+            ->where('ativo', 1)
+            ->with(['contacts' => function($query) {
+                $query->where('ativo', 1);
+            }])
+            ->first();
 
         if (!$store) {
             return response()->json(['message' => 'Loja não encontrada.'], 404);
         }
 
-        $contacts = Contact::where('store_id', $storeId)
-            ->where('ativo', 1)
-            ->get();
-
-        return response()->json($contacts);
+        return response()->json($store->contacts);
     }
 
     public function linkToStore(Request $request)

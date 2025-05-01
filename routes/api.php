@@ -33,9 +33,9 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 
 // Rotas públicas para páginas externas
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
-Route::get('/public/stores', [StoreController::class, 'publicList']); // já existe
+Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
-Route::get('/public/stores/{id}/contacts', [ContactController::class, 'publicByStore']);
+Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
 
 
 // routes/api.php
