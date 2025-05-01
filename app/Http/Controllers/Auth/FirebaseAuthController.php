@@ -29,35 +29,33 @@ class FirebaseAuthController extends Controller
             'idToken' => 'required|string',
             'name' => 'sometimes|string'
         ]);
-
+    
         try {
             $verifiedIdToken = $this->firebaseAuth->verifyIdToken($request->idToken);
             $firebaseUid = $verifiedIdToken->claims()->get('sub');
-
-            $userRecord = $this->firebaseAuth->getUser($firebaseUid);
-
-            // Cria ou atualiza o usuário
-            $user = User::updateOrCreate(
-                ['firebase_uid' => $userRecord->uid],
-                [
-                    'name' => $request->name ?? $userRecord->displayName ?? 'Novo Usuário',
-                    'email' => $userRecord->email,
-                ]
-            );    
         
-            $freshUser = User::find($user->id);
+            $user = User::where('firebase_uid', $firebaseUid)->first();
+        
+            if (!$user) {
+                // Criação de usuário apenas se não existir
+                $userRecord = $this->firebaseAuth->getUser($firebaseUid);
+                
+                $user = User::create([
+                    'firebase_uid' => $firebaseUid,
+                    'name' => $request->name ?? $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
+                    'email' => $userRecord->email,
+                ]);
+            }
         
             return response()->json([
-                'message' => 'Usuário autenticado com sucesso.',
-                'user' => $freshUser->toArray()
+                'message' => 'Operação realizada com sucesso',
+                'user' => $user->fresh()->toArray()
             ]);
         
         } catch (\Throwable $e) {
-            // Log::error('Erro no login Firebase: ' . $e->getMessage());
-            Log::error('Erro no login Firebase: ' . $e->getMessage(), ['exception' => $e]);
-
+            Log::error('Erro na operação Firebase: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Token inválido ou expirado.',
+                'error' => 'Falha na operação',
                 'details' => $e->getMessage(),
             ], 401);
         }
