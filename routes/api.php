@@ -26,7 +26,10 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 // Rotas de contatos
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/contacts', [ContactController::class, 'index']);
+    Route::get('/contacts/{id}', [ContactController::class, 'show']);
     Route::post('/contacts', [ContactController::class, 'store']);
+    Route::put('/contacts/{id}', [ContactController::class, 'update']); 
+    Route::put('/contacts/{id}/stores', [ContactController::class, 'updateStores']);
     Route::get('/contacts/by-store', [ContactController::class, 'contactByStore']);
     Route::post('/contacts/link', [ContactController::class, 'linkToStore']);
 });
@@ -39,7 +42,7 @@ Route::get('/public/stores/{store}/contacts', [ContactController::class, 'public
 
 
 // routes/api.php
-Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
+// Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
 
 
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
@@ -47,17 +50,17 @@ Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarP
 
 
 // Rota para o banco de dados
-Route::get('/db-check', function () {
-    try {
-        \DB::connection()->getPdo();
-        return response()->json(['db' => 'conectado com sucesso']);
-    } catch (\Exception $e) {
-        return response()->json(['erro' => $e->getMessage()], 500);
-    }
-});
+// Route::get('/db-check', function () {
+//     try {
+//         \DB::connection()->getPdo();
+//         return response()->json(['db' => 'conectado com sucesso']);
+//     } catch (\Exception $e) {
+//         return response()->json(['erro' => $e->getMessage()], 500);
+//     }
+// });
 
 // Rota teste
-Route::get('/bcrypt-test', function () {
-    return bcrypt('teste123');
-});
+// Route::get('/bcrypt-test', function () {
+//     return bcrypt('teste123');
+// });
 

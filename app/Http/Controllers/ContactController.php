@@ -23,7 +23,6 @@ class ContactController extends Controller
         return response()->json($contacts);
     }
 
-
     public function show($id)
     {
         $user = auth()->user();
@@ -126,44 +125,82 @@ class ContactController extends Controller
         }
     }
 
+    public function updateStores(Request $request, $id)
+    {
+        try {
+            $user = auth()->user();
+
+            $contact = Contact::where('id', $id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+
+            $request->validate([
+                'lojas' => 'required|array|min:1',
+                'lojas.*' => 'exists:stores,id'
+            ]);
+
+            // Verifica se as lojas pertencem ao usuário
+            $invalidStores = array_diff(
+                $request->lojas,
+                $user->stores()->pluck('id')->toArray()
+            );
+
+            if (!empty($invalidStores)) {
+                return response()->json([
+                    'error' => 'Algumas lojas não pertencem a este usuário'
+                ], 403);
+            }
+
+            // Sincroniza as lojas mantendo o ativo=1
+            $contact->stores()->sync($request->lojas);
+            $contact->stores()->updateExistingPivot($request->lojas, ['ativo' => 1]);
+
+            return response()->json($contact->load('stores'));
+
+        } catch (\Exception $e) {
+            \Log::error('Update stores error: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
+        }
+    }
+
     public function update(Request $request, $id)
     {
-        $user = auth()->user();
+        try {
+            \DB::beginTransaction();
 
-        $contact = Contact::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
+            $user = auth()->user();
+            $contact = Contact::where('id', $id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
 
-        if(!$contact) {
-            return response()->json(['error' => 'Contato não encontrado.'], 404);
-        }
+            $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'whatsapp' => 'sometimes|string|max:20',
+                'photo' => 'nullable|image|max:2048',
+            ]);
 
-        $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'whatsapp' => 'sometimes|string|max:255',
-            'photo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
-        ]);
-
-        if($request->hasFile('photo')){
-            try{
-                $uploaded = Cloudinary::uploadApi()->upload($request->file('photo')->getRealPath());
+            // Atualiza foto
+            if ($request->hasFile('photo')) {
+                $uploaded = Cloudinary::uploadApi()->upload(
+                    $request->file('photo')->getRealPath(),
+                    ['folder' => 'contacts']
+                );
                 $contact->photo = $uploaded['secure_url'];
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
             }
+
+            // Atualiza campos básicos
+            $contact->fill($request->only(['name', 'whatsapp']));
+            $contact->save();
+
+            \DB::commit();
+
+            return response()->json($contact->load('stores'));
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Contact update error: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao atualizar contato'], 500);
         }
-
-        if($request->has('name')){
-            $contact->name = $request->name;
-        }
-
-        if($request->has('whatsapp')){
-            $contact->whatsapp = $request->whatsapp;
-        }
-
-        $contact->save();
-
-        return response()->json($contact);
     }
 
     public function destroy($id)
