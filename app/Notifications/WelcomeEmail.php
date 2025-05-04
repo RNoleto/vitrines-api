@@ -34,13 +34,19 @@ class WelcomeEmail extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $frontendUrl = 'https://vitrines.vercel.app';
+
         return (new MailMessage)
-            ->subject('Bem-vindo ao nosso sistema!')
-            ->greeting("Olá {$notifiable->name}!")
-            ->line('Seu cadastro foi realizado com sucesso.')
-            ->line('Aproveite todos os recursos disponíveis.')
-            ->action('Acessar a Plataforma Vitrines', url('/'))
-            ->line('Obrigado por se juntar a nós!');
+        ->subject('Bem-vindo ao nosso sistema!')
+        ->greeting("Olá {$notifiable->name}!")
+        ->line('Seu cadastro foi realizado com sucesso.')
+        ->line('Aproveite todos os recursos disponíveis.')
+        ->action('Acessar a Plataforma Vitrines', $frontendUrl)
+        ->line('Obrigado por se juntar a nós!')
+        ->salutation('Atenciosamente, Equipe Vitrines')
+        ->with([
+            'customFooter' => "Se você estiver com problemas para clicar no botão, copie e cole esta URL no seu navegador: $frontendUrl"
+        ]);
     }
 
     /**
