@@ -9,7 +9,7 @@ class Contact extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'photo', 'name', 'whatsapp', 'ativo'];
+    protected $fillable = ['user_id', 'photo', 'name', 'whatsapp', 'deleted_at'];
 
     protected $appends = ['photo_url'];
 
@@ -19,9 +19,10 @@ class Contact extends Model
     
     public function stores()
     {
-        return $this->belongsToMany(Store::class, 'contact_store')
+        return $this->belongsToMany(Store::class)
+            ->using(ContactStore::class)
             ->withTimestamps()
-            ->withPivot('ativo');
+            ->withPivot('deleted_at');
     }
 
     public function getPhotoUrlAttribute()

@@ -32,6 +32,7 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::put('/contacts/{id}/stores', [ContactController::class, 'updateStores']);
     Route::get('/contacts/by-store', [ContactController::class, 'contactByStore']);
     Route::post('/contacts/link', [ContactController::class, 'linkToStore']);
+    Route::delete('/contacts/{id}', [ContactController::class, 'destroy']);
 });
 
 // Rotas públicas para páginas externas

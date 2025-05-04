@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Contact;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use PhpParser\Node\Stmt\TryCatch;
+use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
@@ -17,7 +18,9 @@ class ContactController extends Controller
     
         $contacts = Contact::where('user_id', $user->id)
             ->where('ativo', 1)
-            ->with('stores')
+            ->with(['stores' => function($query) {
+                $query->whereNull('contact_store.deleted_at');
+            }])
             ->get();
     
         return response()->json($contacts);
@@ -64,8 +67,8 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         try {
-            \DB::beginTransaction();
-
+            DB::beginTransaction();
+        
             $request->validate([
                 'store_ids' => 'required|array|min:1',
                 'store_ids.*' => 'exists:stores,id',
@@ -73,22 +76,22 @@ class ContactController extends Controller
                 'whatsapp' => 'required|string|max:20',
                 'photo' => 'nullable|image|max:2048',
             ]);
-
+        
             $user = auth()->user();
-
-            // Verifica se as lojas pertencem ao usuário
+        
+            // Verificação de lojas pertencentes ao usuário
             $invalidStores = array_diff(
                 $request->store_ids,
                 $user->stores()->pluck('id')->toArray()
             );
-
+        
             if (!empty($invalidStores)) {
                 return response()->json([
                     'error' => 'Algumas lojas não pertencem a este usuário'
                 ], 403);
             }
-
-            // Upload da foto
+        
+            // Upload da foto (igual ao StoreController)
             $photoUrl = null;
             if ($request->hasFile('photo')) {
                 try {
@@ -102,24 +105,25 @@ class ContactController extends Controller
                     return response()->json(['error' => 'Erro no upload da imagem'], 500);
                 }
             }
-
+        
             // Cria o contato
             $contact = $user->contacts()->create([
                 'name' => $request->name,
                 'whatsapp' => $request->whatsapp,
                 'photo' => $photoUrl,
             ]);
-
+        
             // Vincula as lojas
             $contact->stores()->sync($request->store_ids);
-            $contact->stores()->sync($request->store_ids, ['ativo' => 1]);
-
-            \DB::commit();
-
-            return response()->json($contact->load('stores'), 201);
-
+        
+            DB::commit();
+        
+            return response()->json($contact->load(['stores' => function($query) {
+                $query->whereNull('contact_store.deleted_at');
+            }]), 201);
+        
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             \Log::error('Contact store error: ' . $e->getMessage());
             return response()->json(['error' => 'Erro interno no servidor'], 500);
         }
@@ -139,7 +143,7 @@ class ContactController extends Controller
                 'lojas.*' => 'exists:stores,id'
             ]);
 
-            // Verifica se as lojas pertencem ao usuário
+            // Verificação de lojas
             $invalidStores = array_diff(
                 $request->lojas,
                 $user->stores()->pluck('id')->toArray()
@@ -151,14 +155,29 @@ class ContactController extends Controller
                 ], 403);
             }
 
-            // Sincroniza as lojas mantendo o ativo=1
-            $contact->stores()->sync($request->lojas);
-            $contact->stores()->updateExistingPivot($request->lojas, ['ativo' => 1]);
+            // Sincronização com soft delete
+            $currentStores = $contact->stores()->pluck('stores.id');
+            
+            // Restaura relações deletadas
+            $contact->stores()
+                ->whereIn('stores.id', $request->lojas)
+                ->whereNotNull('contact_store.deleted_at')
+                ->update(['contact_store.deleted_at' => null]);
 
-            return response()->json($contact->load('stores'));
+            // Adiciona novas relações
+            $contact->stores()->syncWithoutDetaching($request->lojas);
+            
+            // Soft delete para relações removidas
+            $contact->stores()
+                ->whereNotIn('stores.id', $request->lojas)
+                ->update(['contact_store.deleted_at' => now()]);
+
+            return response()->json($contact->load(['stores' => function($query) {
+                $query->whereNull('contact_store.deleted_at');
+            }]));
 
         } catch (\Exception $e) {
-            \Log::error('Update stores error: ' . $e->getMessage());
+            logger()->error('Update stores error: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
         }
     }
@@ -166,7 +185,7 @@ class ContactController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             $user = auth()->user();
             $contact = Contact::where('id', $id)
@@ -192,12 +211,12 @@ class ContactController extends Controller
             $contact->fill($request->only(['name', 'whatsapp']));
             $contact->save();
 
-            \DB::commit();
+            DB::commit();
 
             return response()->json($contact->load('stores'));
 
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             \Log::error('Contact update error: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao atualizar contato'], 500);
         }
@@ -228,8 +247,8 @@ class ContactController extends Controller
             ->where('ativo', 1)
             ->with(['contacts' => function($query) {
                 $query->where('contacts.ativo', 1)
-                      ->wherePivot('ativo', 1)
-                      ->with('stores'); // Carrega as lojas do contato
+                      ->whereNull('contact_store.deleted_at')
+                      ->with('stores');
             }])
             ->first();
         
