@@ -19,7 +19,7 @@ class Contact extends Model
     
     public function stores()
     {
-        return $this->belongsToMany(Store::class)
+        return $this->belongsToMany(Store::class, 'contact_store')
             ->using(ContactStore::class)
             ->withTimestamps()
             ->withPivot('deleted_at');

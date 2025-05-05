@@ -132,8 +132,9 @@ class ContactController extends Controller
     public function updateStores(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            DB::beginTransaction();
         
+            $user = auth()->user();
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
@@ -143,7 +144,7 @@ class ContactController extends Controller
                 'lojas.*' => 'exists:stores,id'
             ]);
         
-            // Verificação de lojas
+            // Verifica se as lojas pertencem ao usuário
             $invalidStores = array_diff(
                 $request->lojas,
                 $user->stores()->pluck('id')->toArray()
@@ -155,24 +156,25 @@ class ContactController extends Controller
                 ], 403);
             }
         
-            // Restaura relações deletadas (soft delete)
-            $contact->stores()
-                ->withTrashedPivots() // Inclui registros com deleted_at
-                ->whereIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => null]);
+            // Sincronização com restauração de relações deletadas
+            foreach ($request->lojas as $storeId) {
+                $contact->stores()
+                    ->withTrashedPivots()
+                    ->updateExistingPivot($storeId, ['deleted_at' => null]);
+            }
         
-            // Adiciona novas relações (se não existirem)
-            $contact->stores()->syncWithoutDetaching($request->lojas);
-        
-            // Remove relações não desejadas (soft delete)
+            // Soft delete para relações não presentes
             $contact->stores()
                 ->whereNotIn('stores.id', $request->lojas)
                 ->update(['contact_store.deleted_at' => now()]);
         
+            DB::commit();
+        
             return response()->json($contact->load('stores'));
         
         } catch (\Exception $e) {
-            logger()->error('Update stores error: ' . $e->getMessage());
+            DB::rollBack();
+            \Log::error("Update stores error: " . $e->getMessage());
             return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
         }
     }
