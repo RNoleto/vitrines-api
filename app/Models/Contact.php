@@ -19,7 +19,7 @@ class Contact extends Model
     
     public function stores()
     {
-        return $this->belongsToMany(Store::class, 'contact_store')
+        return $this->belongsToMany(Store::class)
             ->using(ContactStore::class)
             ->withTimestamps()
             ->withPivot('deleted_at');
@@ -28,10 +28,5 @@ class Contact extends Model
     public function getPhotoUrlAttribute()
     {
         return $this->photo ? asset("storage/{$this->photo}") : null;
-    }
-
-    public function scopeWithTrashedPivots($query)
-    {
-        return $query->withTrashedPivots();
     }
 }

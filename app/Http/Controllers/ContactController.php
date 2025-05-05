@@ -132,9 +132,8 @@ class ContactController extends Controller
     public function updateStores(Request $request, $id)
     {
         try {
-            DB::beginTransaction();
-        
             $user = auth()->user();
+        
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
@@ -144,7 +143,7 @@ class ContactController extends Controller
                 'lojas.*' => 'exists:stores,id'
             ]);
         
-            // Verifica se as lojas pertencem ao usuário
+            // Verificação de lojas
             $invalidStores = array_diff(
                 $request->lojas,
                 $user->stores()->pluck('id')->toArray()
@@ -156,25 +155,13 @@ class ContactController extends Controller
                 ], 403);
             }
         
-            // Sincronização com restauração de relações deletadas
-            foreach ($request->lojas as $storeId) {
-                $contact->stores()
-                    ->withTrashedPivots()
-                    ->updateExistingPivot($storeId, ['deleted_at' => null]);
-            }
+            // Sincroniza as lojas, removendo as associações que não estão na lista
+            $contact->stores()->sync($request->lojas);
         
-            // Soft delete para relações não presentes
-            $contact->stores()
-                ->whereNotIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => now()]);
-        
-            DB::commit();
-        
-            return response()->json($contact->load('stores'));
+            return response()->json($contact->load(['stores']));
         
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error("Update stores error: " . $e->getMessage());
+            logger()->error('Update stores error: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
         }
     }
