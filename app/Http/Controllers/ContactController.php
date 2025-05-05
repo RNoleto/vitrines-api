@@ -133,49 +133,33 @@ class ContactController extends Controller
     {
         try {
             $user = auth()->user();
-
+        
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
-
+        
             $request->validate([
                 'lojas' => 'required|array|min:1',
                 'lojas.*' => 'exists:stores,id'
             ]);
-
+        
             // Verificação de lojas
             $invalidStores = array_diff(
                 $request->lojas,
                 $user->stores()->pluck('id')->toArray()
             );
-
+        
             if (!empty($invalidStores)) {
                 return response()->json([
                     'error' => 'Algumas lojas não pertencem a este usuário'
                 ], 403);
             }
-
-            // Sincronização com soft delete
-            $currentStores = $contact->stores()->pluck('stores.id');
-            
-            // Restaura relações deletadas
-            $contact->stores()
-                ->whereIn('stores.id', $request->lojas)
-                ->whereNotNull('contact_store.deleted_at')
-                ->update(['contact_store.deleted_at' => null]);
-
-            // Adiciona novas relações
-            $contact->stores()->syncWithoutDetaching($request->lojas);
-            
-            // Soft delete para relações removidas
-            $contact->stores()
-                ->whereNotIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => now()]);
-
-            return response()->json($contact->load(['stores' => function($query) {
-                $query->whereNull('contact_store.deleted_at');
-            }]));
-
+        
+            // Sincroniza as lojas, removendo as associações que não estão na lista
+            $contact->stores()->sync($request->lojas);
+        
+            return response()->json($contact->load(['stores']));
+        
         } catch (\Exception $e) {
             logger()->error('Update stores error: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
