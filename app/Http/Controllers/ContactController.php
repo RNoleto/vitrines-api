@@ -132,8 +132,9 @@ class ContactController extends Controller
     public function updateStores(Request $request, $id)
     {
         try {
-            $user = auth()->user();
+            DB::beginTransaction();
         
+            $user = auth()->user();
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
@@ -155,25 +156,21 @@ class ContactController extends Controller
                 ], 403);
             }
         
-            // Restaura relações deletadas (soft delete)
-            $contact->stores()
-                ->withTrashedPivots() // Inclui registros com deleted_at
-                ->whereIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => null]);
+            // Sincronização segura com restauração
+            $contact->stores()->syncWithPivotValues($request->lojas, ['deleted_at' => null], false);
         
-            // Adiciona novas relações (se não existirem)
-            $contact->stores()->syncWithoutDetaching($request->lojas);
+            DB::commit();
         
-            // Remove relações não desejadas (soft delete)
-            $contact->stores()
-                ->whereNotIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => now()]);
-        
-            return response()->json($contact->load('stores'));
+            return response()->json($contact->load(['stores' => function($query) {
+                $query->whereNull('contact_store.deleted_at');
+            }]));
         
         } catch (\Exception $e) {
+            DB::rollBack();
             logger()->error('Update stores error: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
+            return response()->json([
+                'error' => 'Erro ao atualizar lojas: ' . $e->getMessage() // Mostra o erro real
+            ], 500);
         }
     }
 
@@ -181,18 +178,18 @@ class ContactController extends Controller
     {
         try {
             DB::beginTransaction();
-        
+
             $user = auth()->user();
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
-        
+
             $request->validate([
                 'name' => 'required|string|max:255',
                 'whatsapp' => 'required|string|max:20',
                 'photo' => 'nullable|image|max:2048',
             ]);
-        
+
             // Atualiza foto
             if ($request->hasFile('photo')) {
                 $uploaded = Cloudinary::upload(
@@ -201,14 +198,14 @@ class ContactController extends Controller
                 );
                 $contact->photo = $uploaded->getSecurePath();
             }
-        
+
             // Atualiza campos básicos
             $contact->update($request->only(['name', 'whatsapp']));
-        
+
             DB::commit();
-        
+
             return response()->json($contact->load('stores'));
-        
+
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Contact update error: ' . $e->getMessage());
