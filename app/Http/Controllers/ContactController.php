@@ -129,56 +129,41 @@ class ContactController extends Controller
         }
     }
 
-    public function updateStores(Request $request, $id)
+    public function updateStores(array $newStoreIds)
     {
-        try {
-            $user = auth()->user();
+        $existing = $this->stores()->pluck('store_id')->toArray(); // Só os ativos
 
-            $contact = Contact::where('id', $id)
-                ->where('user_id', $user->id)
-                ->firstOrFail();
+        // 1. Remover vínculos que foram desmarcados (estão no banco, mas não no novo array)
+        $toDetach = array_diff($existing, $newStoreIds);
+        if (!empty($toDetach)) {
+            $this->stores()->updateExistingPivot($toDetach, ['deleted_at' => now()]);
+        }
 
-            $request->validate([
-                'lojas' => 'required|array|min:1',
-                'lojas.*' => 'exists:stores,id'
-            ]);
+        // 2. Restaurar vínculos soft deleted (estão no novo array, mas com deleted_at no banco)
+        $softDeleted = DB::table('contact_store')
+            ->where('contact_id', $this->id)
+            ->whereIn('store_id', $newStoreIds)
+            ->whereNotNull('deleted_at')
+            ->get();
 
-            // Verificação de lojas
-            $invalidStores = array_diff(
-                $request->lojas,
-                $user->stores()->pluck('id')->toArray()
-            );
+        foreach ($softDeleted as $row) {
+            DB::table('contact_store')
+                ->where('id', $row->id)
+                ->update(['deleted_at' => null]);
+        }
+        
 
-            if (!empty($invalidStores)) {
-                return response()->json([
-                    'error' => 'Algumas lojas não pertencem a este usuário'
-                ], 403);
+        // 3. Inserir novos vínculos (não existem no banco ainda)
+        $toAttach = array_diff($newStoreIds, $existing, $softDeleted->pluck('store_id')->toArray());
+        if (!empty($toAttach)) {
+            foreach ($toAttach as $storeId) {
+                DB::table('contact_store')->insert([
+                    'contact_id' => $this->id,
+                    'store_id' => $storeId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
-
-            // Sincronização com soft delete
-            $currentStores = $contact->stores()->pluck('stores.id');
-            
-            // Restaura relações deletadas
-            $contact->stores()
-                ->whereIn('stores.id', $request->lojas)
-                ->whereNotNull('contact_store.deleted_at')
-                ->update(['contact_store.deleted_at' => null]);
-
-            // Adiciona novas relações
-            $contact->stores()->syncWithoutDetaching($request->lojas);
-            
-            // Soft delete para relações removidas
-            $contact->stores()
-                ->whereNotIn('stores.id', $request->lojas)
-                ->update(['contact_store.deleted_at' => now()]);
-
-            return response()->json($contact->load(['stores' => function($query) {
-                $query->whereNull('contact_store.deleted_at');
-            }]));
-
-        } catch (\Exception $e) {
-            logger()->error('Update stores error: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
         }
     }
 
@@ -193,8 +178,8 @@ class ContactController extends Controller
                 ->firstOrFail();
 
             $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'whatsapp' => 'sometimes|string|max:20',
+                'name' => 'required|string|max:255', 
+                'whatsapp' => 'required|string|max:20',
                 'photo' => 'nullable|image|max:2048',
             ]);
 
@@ -208,8 +193,10 @@ class ContactController extends Controller
             }
 
             // Atualiza campos básicos
-            $contact->fill($request->only(['name', 'whatsapp']));
-            $contact->save();
+            $contact->update([
+                'name' => $request->name,
+                'whatsapp' => $request->whatsapp
+            ]);
 
             DB::commit();
 

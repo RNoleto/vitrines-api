@@ -11,4 +11,5 @@ class ContactStore extends Pivot
     
     protected $table = 'contact_store';
     protected $dates = ['deleted_at'];
+    protected $fillable = ['contact_id', 'store_id', 'deleted_at'];
 }

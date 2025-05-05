@@ -22,7 +22,7 @@ class Contact extends Model
         return $this->belongsToMany(Store::class)
             ->using(ContactStore::class)
             ->withTimestamps()
-            ->withPivot('deleted_at');
+            ->withPivot(['id', 'deleted_at']);
     }
 
     public function getPhotoUrlAttribute()
