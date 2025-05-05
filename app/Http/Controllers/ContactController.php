@@ -132,45 +132,53 @@ class ContactController extends Controller
     public function updateStores(Request $request, $id)
     {
         try {
-            DB::beginTransaction();
-        
             $user = auth()->user();
+
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
-        
+
             $request->validate([
                 'lojas' => 'required|array|min:1',
                 'lojas.*' => 'exists:stores,id'
             ]);
-        
+
             // Verificação de lojas
             $invalidStores = array_diff(
                 $request->lojas,
                 $user->stores()->pluck('id')->toArray()
             );
-        
+
             if (!empty($invalidStores)) {
                 return response()->json([
                     'error' => 'Algumas lojas não pertencem a este usuário'
                 ], 403);
             }
-        
-            // Sincronização segura com restauração
-            $contact->stores()->syncWithPivotValues($request->lojas, ['deleted_at' => null], false);
-        
-            DB::commit();
-        
+
+            // Sincronização com soft delete
+            $currentStores = $contact->stores()->pluck('stores.id');
+            
+            // Restaura relações deletadas
+            $contact->stores()
+                ->whereIn('stores.id', $request->lojas)
+                ->whereNotNull('contact_store.deleted_at')
+                ->update(['contact_store.deleted_at' => null]);
+
+            // Adiciona novas relações
+            $contact->stores()->syncWithoutDetaching($request->lojas);
+            
+            // Soft delete para relações removidas
+            $contact->stores()
+                ->whereNotIn('stores.id', $request->lojas)
+                ->update(['contact_store.deleted_at' => now()]);
+
             return response()->json($contact->load(['stores' => function($query) {
                 $query->whereNull('contact_store.deleted_at');
             }]));
-        
+
         } catch (\Exception $e) {
-            DB::rollBack();
             logger()->error('Update stores error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Erro ao atualizar lojas: ' . $e->getMessage() // Mostra o erro real
-            ], 500);
+            return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
         }
     }
 
@@ -185,22 +193,23 @@ class ContactController extends Controller
                 ->firstOrFail();
 
             $request->validate([
-                'name' => 'required|string|max:255',
-                'whatsapp' => 'required|string|max:20',
+                'name' => 'sometimes|string|max:255',
+                'whatsapp' => 'sometimes|string|max:20',
                 'photo' => 'nullable|image|max:2048',
             ]);
 
             // Atualiza foto
             if ($request->hasFile('photo')) {
-                $uploaded = Cloudinary::upload(
+                $uploaded = Cloudinary::uploadApi()->upload(
                     $request->file('photo')->getRealPath(),
                     ['folder' => 'contacts']
                 );
-                $contact->photo = $uploaded->getSecurePath();
+                $contact->photo = $uploaded['secure_url'];
             }
 
             // Atualiza campos básicos
-            $contact->update($request->only(['name', 'whatsapp']));
+            $contact->fill($request->only(['name', 'whatsapp']));
+            $contact->save();
 
             DB::commit();
 
@@ -279,3 +288,4 @@ class ContactController extends Controller
     }
 
 }
+

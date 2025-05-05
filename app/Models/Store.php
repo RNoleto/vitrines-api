@@ -39,10 +39,9 @@ class Store extends Model
     public function contacts()
     {
         return $this->belongsToMany(Contact::class)
-        ->using(ContactStore::class)
-        ->withTimestamps()
-        ->withPivot('deleted_at')
-        ->wherePivotNull('deleted_at');
+            ->using(ContactStore::class)
+            ->withTimestamps()
+            ->withPivot('deleted_at');
     }
 
     public function getRouteKeyName()

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\ContactStore;
 
 class Contact extends Model
 {
@@ -21,10 +20,9 @@ class Contact extends Model
     public function stores()
     {
         return $this->belongsToMany(Store::class)
-        ->using(ContactStore::class)
-        ->withTimestamps()
-        ->withPivot('deleted_at')
-        ->wherePivotNull('deleted_at');
+            ->using(ContactStore::class)
+            ->withTimestamps()
+            ->withPivot('deleted_at');
     }
 
     public function getPhotoUrlAttribute()
