@@ -181,35 +181,34 @@ class ContactController extends Controller
     {
         try {
             DB::beginTransaction();
-
+        
             $user = auth()->user();
             $contact = Contact::where('id', $id)
                 ->where('user_id', $user->id)
                 ->firstOrFail();
-
+        
             $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'whatsapp' => 'sometimes|string|max:20',
+                'name' => 'required|string|max:255',
+                'whatsapp' => 'required|string|max:20',
                 'photo' => 'nullable|image|max:2048',
             ]);
-
+        
             // Atualiza foto
             if ($request->hasFile('photo')) {
-                $uploaded = Cloudinary::uploadApi()->upload(
+                $uploaded = Cloudinary::upload(
                     $request->file('photo')->getRealPath(),
                     ['folder' => 'contacts']
                 );
-                $contact->photo = $uploaded['secure_url'];
+                $contact->photo = $uploaded->getSecurePath();
             }
-
+        
             // Atualiza campos básicos
-            $contact->fill($request->only(['name', 'whatsapp']));
-            $contact->save();
-
+            $contact->update($request->only(['name', 'whatsapp']));
+        
             DB::commit();
-
+        
             return response()->json($contact->load('stores'));
-
+        
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Contact update error: ' . $e->getMessage());
