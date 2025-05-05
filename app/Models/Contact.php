@@ -29,4 +29,9 @@ class Contact extends Model
     {
         return $this->photo ? asset("storage/{$this->photo}") : null;
     }
+
+    public function scopeWithTrashedPivots($query)
+    {
+        return $query->withTrashedPivots();
+    }
 }

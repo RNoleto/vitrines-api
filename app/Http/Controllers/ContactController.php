@@ -155,10 +155,21 @@ class ContactController extends Controller
                 ], 403);
             }
         
-            // Sincroniza as lojas, removendo as associações que não estão na lista
-            $contact->stores()->sync($request->lojas);
+            // Restaura relações deletadas (soft delete)
+            $contact->stores()
+                ->withTrashedPivots() // Inclui registros com deleted_at
+                ->whereIn('stores.id', $request->lojas)
+                ->update(['contact_store.deleted_at' => null]);
         
-            return response()->json($contact->load(['stores']));
+            // Adiciona novas relações (se não existirem)
+            $contact->stores()->syncWithoutDetaching($request->lojas);
+        
+            // Remove relações não desejadas (soft delete)
+            $contact->stores()
+                ->whereNotIn('stores.id', $request->lojas)
+                ->update(['contact_store.deleted_at' => now()]);
+        
+            return response()->json($contact->load('stores'));
         
         } catch (\Exception $e) {
             logger()->error('Update stores error: ' . $e->getMessage());
