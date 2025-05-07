@@ -7,10 +7,6 @@ use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
 
-Route::get('/ping', function () {
-    return response()->json(['message' => 'pong from API']);
-});
-
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
 // Rotas de Cadastro de Lojas
@@ -42,26 +38,12 @@ Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']
 Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
 
 
-// routes/api.php
-// Route::middleware('auth:sanctum')->get('/minhas-lojas', [StoreController::class, 'minhasLojas']);
-
 
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
 
 
-
-// Rota para o banco de dados
-// Route::get('/db-check', function () {
-//     try {
-//         \DB::connection()->getPdo();
-//         return response()->json(['db' => 'conectado com sucesso']);
-//     } catch (\Exception $e) {
-//         return response()->json(['erro' => $e->getMessage()], 500);
-//     }
-// });
-
-// Rota teste
-// Route::get('/bcrypt-test', function () {
-//     return bcrypt('teste123');
-// });
-
+Route::middleware([FirebaseAuthenticate::class, 'role:admin'])->group(function(){
+    Route::get('/admin/dashboard', function() {
+        return response()->json(['message' => 'Bem-vindo, administrador']);
+    });
+});

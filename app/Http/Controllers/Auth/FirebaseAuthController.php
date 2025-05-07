@@ -46,6 +46,7 @@ class FirebaseAuthController extends Controller
                     'firebase_uid' => $firebaseUid,
                     'name' => $request->name ?? $userRecord->displayName ?? $this->extractNameFromEmail($userRecord->email),
                     'email' => $userRecord->email,
+                    'role' => $request->input('role', 'user'), // Padrão 'user'
                 ]);
             }
 

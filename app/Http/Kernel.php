@@ -67,7 +67,10 @@ class Kernel extends HttpKernel
         'throttle'        => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified'        => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 
-        // ** nosso middleware de Firebase **
+        // ** middleware de Firebase **
         'firebase.auth'   => \App\Http\Middleware\FirebaseAuthenticate::class,
+
+        // ** middleware de roles **
+        'role'            => \App\Http\Middleware\CheckRole::class,
     ];
 }
