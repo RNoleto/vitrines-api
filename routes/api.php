@@ -7,6 +7,8 @@ use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
 
+Route::get('/users', [UserController::class, 'users']);
+
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
 // Rotas de Cadastro de Lojas
