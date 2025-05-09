@@ -27,6 +27,19 @@ class ContactController extends Controller
         return response()->json($contacts);
     }
 
+    public function adminIndex()
+    {
+        $user = auth()->user();
+
+        $contacts = Contact::where('user_id', $user->id)
+            ->with(['stores' => function ($query) {
+                $query->whereNull('contact_store.deleted_at');
+            }])
+            ->get();
+
+        return response()->json($contacts);
+    }
+
     public function show($id)
     {
         $user = auth()->user();
@@ -129,146 +142,6 @@ class ContactController extends Controller
             return response()->json(['error' => 'Erro interno no servidor'], 500);
         }
     }
-
-    // public function updateStores(Request $request, $id)
-    // {
-    //     try {
-    //         $user = auth()->user();
-
-    //         $contact = Contact::where('id', $id)
-    //             ->where('user_id', $user->id)
-    //             ->firstOrFail();
-
-    //         $request->validate([
-    //             'lojas' => 'required|array|min:1',
-    //             'lojas.*' => 'exists:stores,id'
-    //         ]);
-
-    //         // Verifica se as lojas pertencem ao usuário
-    //         $invalidStores = array_diff(
-    //             $request->lojas,
-    //             $user->stores()->pluck('id')->toArray()
-    //         );
-
-    //         if (!empty($invalidStores)) {
-    //             return response()->json([
-    //                 'error' => 'Algumas lojas não pertencem a este usuário'
-    //             ], 403);
-    //         }
-
-    //         // Sincroniza as lojas mantendo o ativo=1
-    //         $contact->stores()->sync($request->lojas);
-    //         $contact->stores()->updateExistingPivot($request->lojas, ['ativo' => 1]);
-
-    //         return response()->json($contact->load('stores'));
-
-    //     } catch (\Exception $e) {
-    //         \Log::error('Update stores error: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
-    //     }
-    // }
-
-    // public function updateStores(Request $request, $id)
-    // {
-    //     try {
-    //         $user = auth()->user();
-    //         Log::info("Usuário autenticado: {$user->id}");
-
-    //         $contact = Contact::where('id', $id)
-    //             ->where('user_id', $user->id)
-    //             ->firstOrFail();
-
-    //         Log::info("Contato encontrado: {$contact->id}");
-
-    //         $request->validate([
-    //             'lojas' => 'required|array|min:1',
-    //             'lojas.*' => 'exists:stores,id'
-    //         ]);
-
-    //         Log::debug('IDs de lojas recebidas:', $request->lojas);
-
-    //         // Verifica se as lojas pertencem ao usuário
-    //         $userStoreIds = $user->stores()->pluck('id')->toArray();
-    //         Log::debug('Lojas do usuário:', $userStoreIds);
-
-    //         $invalidStores = array_diff($request->lojas, $userStoreIds);
-    //         if (!empty($invalidStores)) {
-    //             Log::warning('Lojas inválidas para este usuário:', $invalidStores);
-
-    //             return response()->json([
-    //                 'error' => 'Algumas lojas não pertencem a este usuário'
-    //             ], 403);
-    //         }
-
-    //         $storeIds = $request->lojas;
-
-    //         // Logs iniciais dos vínculos
-    //         $vinculosAntes = DB::table('contact_store')
-    //             ->where('contact_id', $contact->id)
-    //             ->get();
-
-    //         Log::debug("Vínculos atuais antes da atualização:", $vinculosAntes->toArray());
-
-    //         // Restaurar vínculos soft-deletados
-    //         foreach ($storeIds as $storeId) {
-    //             $restaurado = DB::table('contact_store')
-    //                 ->where('contact_id', $contact->id)
-    //                 ->where('store_id', $storeId)
-    //                 ->whereNotNull('deleted_at')
-    //                 ->update(['deleted_at' => null]);
-
-    //             if ($restaurado) {
-    //                 Log::info("Vínculo reativado: contact_id {$contact->id}, store_id {$storeId}");
-    //             }
-    //         }
-
-    //         // Desativar vínculos não enviados
-    //         $vinculosAtivos = DB::table('contact_store')
-    //             ->where('contact_id', $contact->id)
-    //             ->whereNull('deleted_at')
-    //             ->pluck('store_id')
-    //             ->toArray();
-
-    //         foreach ($vinculosAtivos as $storeId) {
-    //             if (!in_array($storeId, $storeIds)) {
-    //                 DB::table('contact_store')
-    //                     ->where('contact_id', $contact->id)
-    //                     ->where('store_id', $storeId)
-    //                     ->update(['deleted_at' => now()]);
-
-    //                 Log::info("Vínculo desativado: contact_id {$contact->id}, store_id {$storeId}");
-    //             }
-    //         }
-
-    //         // Criar novos vínculos que ainda não existem
-    //         $vinculosExistentes = DB::table('contact_store')
-    //             ->where('contact_id', $contact->id)
-    //             ->pluck('store_id')
-    //             ->toArray();
-
-    //         foreach ($storeIds as $storeId) {
-    //             if (!in_array($storeId, $vinculosExistentes)) {
-    //                 $contact->stores()->attach($storeId);
-    //                 Log::info("Novo vínculo criado: contact_id {$contact->id}, store_id {$storeId}");
-    //             }
-    //         }
-
-    //         // Logs finais dos vínculos
-    //         $vinculosDepois = DB::table('contact_store')
-    //             ->where('contact_id', $contact->id)
-    //             ->get();
-
-    //         Log::debug("Vínculos após atualização:", $vinculosDepois->toArray());
-
-    //         return response()->json($contact->load('stores'));
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Erro ao atualizar vínculos de loja: ' . $e->getMessage(), [
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-    //         return response()->json(['error' => 'Erro ao atualizar lojas'], 500);
-    //     }
-    // }
 
     public function updateStores(Request $request, $id)
     {

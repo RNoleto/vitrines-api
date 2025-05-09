@@ -45,6 +45,7 @@ Route::post('/stores/{store}/contacts/{contact}/click', [StoreController::class,
 
 //Contatos
 Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
+Route::get('/public/contact', [ContactController::class, 'adminIndex']);
 
 
 // Rotas de autenticação
