@@ -47,11 +47,6 @@ Route::post('/stores/{store}/contacts/{contact}/click', [StoreController::class,
 Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
 // Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 
-//Rotas Administrativas
-Route::middleware([FirebaseAuthenticate::class, 'role:admin'])->group(function () {
-    Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
-});
-
 
 
 // Rotas de autenticação
@@ -59,7 +54,8 @@ Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarP
 
 
 Route::middleware([FirebaseAuthenticate::class, 'role:admin'])->group(function(){
-    Route::get('/admin/dashboard', function() {
+    Route::get('/admin/dashboard', function() { 
         return response()->json(['message' => 'Bem-vindo, administrador']);
     });
+    Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });

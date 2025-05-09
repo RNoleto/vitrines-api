@@ -17,8 +17,8 @@ class CheckRole
     {
         $user = $request->user();
 
-        if(!user || $user->role !== $role){
-            return response()->json(['error' => 'Acesso não autorizado.'], 403)
+        if(!$user || $user->role !== $role){
+            return response()->json(['error' => 'Acesso não autorizado.'], 403);
         }
 
         return $next($request);
