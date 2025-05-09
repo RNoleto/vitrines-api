@@ -37,9 +37,9 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
 Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
+Route::post('/public/stores/{slug}/visit', [StoreController::class, 'registerVisit']);
+
 Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
-
-
 
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
 

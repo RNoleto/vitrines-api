@@ -205,4 +205,19 @@ class StoreController extends Controller
         return $slug;
     }
 
+    public function registerVisit($slug)
+    {
+        $store = Store::where('slug', $slug)->first();
+
+        if(!$store){
+            return response()->json(['error' => 'loja não encontrada'], 404);
+        }
+
+        $store->increment('visits');
+        $store->last_visited_at = now();
+        $store->save();
+
+        return response()->json(['message' => 'Visita registrada com sucesso']);
+    }
+
 }
