@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -235,5 +236,26 @@ class StoreController extends Controller
         return response()->json(['message' => 'Clique registrado com sucesso']);
     }
 
+    public function registerContactClick($storeId, $contactId)
+    {
+        // Validação dos IDs
+        if (!is_numeric($storeId) || !is_numeric($contactId)) {
+            return response()->json(['error' => 'IDs inválidos'], 400);
+        }
+    
+        try {
+            DB::table('contact_clicks')->insert([
+                'store_id' => $storeId,
+                'contact_id' => $contactId,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        
+            return response()->json(['success' => true]);
+        
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erro ao registrar clique'], 500);
+        }
+    }
 
 }
