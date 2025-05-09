@@ -65,12 +65,12 @@ Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarP
 // });
 
 // Rotas Administrativas (Dashboard Admin)
-Route::middleware(FirebaseAuthenticate::class)->group(function() {
+Route::middleware('firebase.auth')->group(function() {
     Route::middleware('role:admin')->group(function() {
         Route::get('/admin/dashboard', function() {
             return response()->json(['message' => 'Bem-vindo, administrador']);
         });
-
+        
         Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
     });
 });
