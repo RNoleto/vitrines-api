@@ -34,13 +34,19 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 });
 
 // Rotas públicas para páginas externas
+
+//Lojas
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
 Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
 Route::post('/public/stores/{slug}/visit', [StoreController::class, 'registerVisit']);
+Route::post('/public/stores/links/{id}/click', [StoreController::class, 'registerLinkClick']);
 
+//Contatos
 Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
 
+
+// Rotas de autenticação
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
 
 

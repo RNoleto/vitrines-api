@@ -220,4 +220,20 @@ class StoreController extends Controller
         return response()->json(['message' => 'Visita registrada com sucesso']);
     }
 
+    public function registerLinkClick($id)
+    {
+        $link = StoreLink::find($id);
+    
+        if (!$link) {
+            return response()->json(['error' => 'Link não encontrado'], 404);
+        }
+    
+        $link->increment('visits');
+        $link->last_visited_at = now();
+        $link->save();
+    
+        return response()->json(['message' => 'Clique registrado com sucesso']);
+    }
+
+
 }
