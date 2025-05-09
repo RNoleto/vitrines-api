@@ -6,7 +6,6 @@ use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
-use App\Http\Middleware\FirebaseAuth;
 
 Route::get('/users', [UserController::class, 'users']);
 
@@ -38,17 +37,14 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 
 //Lojas
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
-Route::get('/public/stores', [StoreController::class, 'publicList']);
+// Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
 Route::post('/public/stores/{slug}/visit', [StoreController::class, 'registerVisit']);
 Route::post('/public/stores/links/{id}/click', [StoreController::class, 'registerLinkClick']);
 Route::post('/stores/{store}/contacts/{contact}/click', [StoreController::class, 'registerContactClick']);
 
 //Contatos
-Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
-// Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
-
-
+// Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
 
 // Rotas de autenticação
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
@@ -62,6 +58,7 @@ Route::middleware([
     Route::get('/admin/dashboard', function() {
         return response()->json(['message' => 'Bem-vindo, administrador']);
     });
+    Route::get('/public/stores', [StoreController::class, 'publicList']);
     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });
 
