@@ -29,15 +29,7 @@ class ContactController extends Controller
 
     public function adminIndex()
     {
-        $user = auth()->user();
-
-        $contacts = Contact::where('user_id', $user->id)
-            ->with(['stores' => function ($query) {
-                $query->whereNull('contact_store.deleted_at');
-            }])
-            ->get();
-
-        return response()->json($contacts);
+        return Contact::all();
     }
 
     public function show($id)
