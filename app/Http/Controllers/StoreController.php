@@ -186,6 +186,11 @@ class StoreController extends Controller
             ->where('ativo', 1)
             ->with(['links', 'contacts'])
             ->firstOrFail();
+
+        $store->increment('visits');
+        $store->update(['last_visited_at' => now()]);
+
+        return response()->json($store->append('logo_url'));
     }
 
     private function makeUniqueSlug($slug)
