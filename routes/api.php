@@ -54,23 +54,14 @@ Route::get('/public/stores/{store}/contacts', [ContactController::class, 'public
 Route::get('/usuarios/firebase/{firebase_uid}', [UserController::class, 'buscarPorFirebase']);
 
 
-// Route::middleware([
-//     FirebaseAuthenticate::class,
-//     \App\Http\Middleware\CheckRole::class.':admin'
-// ])->group(function(){
-//     Route::get('/admin/dashboard', function() {
-//         return response()->json(['message' => 'Bem-vindo, administrador']);
-//     });
-//     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
-// });
-
 // Rotas Administrativas (Dashboard Admin)
-Route::middleware('firebase.auth')->group(function() {
-    Route::middleware('role:admin')->group(function() {
-        Route::get('/admin/dashboard', function() {
-            return response()->json(['message' => 'Bem-vindo, administrador']);
-        });
-        
-        Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
+Route::middleware([
+    FirebaseAuthenticate::class,
+    \App\Http\Middleware\CheckRole::class.':admin'
+])->group(function(){
+    Route::get('/admin/dashboard', function() {
+        return response()->json(['message' => 'Bem-vindo, administrador']);
     });
+    Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });
+
