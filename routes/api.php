@@ -7,8 +7,6 @@ use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
 
-Route::get('/users', [UserController::class, 'users']);
-
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
 // Rotas de Cadastro de Lojas
@@ -58,6 +56,7 @@ Route::middleware([
     Route::get('/admin/dashboard', function() {
         return response()->json(['message' => 'Bem-vindo, administrador']);
     });
+    Route::get('/users', [UserController::class, 'users']);
     Route::get('/public/stores', [StoreController::class, 'publicList']);
     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });
