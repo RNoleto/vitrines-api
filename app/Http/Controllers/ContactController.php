@@ -29,7 +29,7 @@ class ContactController extends Controller
 
     public function adminIndex()
     {
-        return Contact::all();
+        return Contact::with('stores')->get();
     }
 
     public function show($id)
