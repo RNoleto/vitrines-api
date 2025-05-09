@@ -27,13 +27,9 @@ class ContactController extends Controller
         return response()->json($contacts);
     }
 
-    public function adminIndex(Request $request)
+    public function adminIndex()
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['error' => 'Acesso não autorizado.'], 403);
-        }
-    
-        return Contact::with('stores')->get();
+        return response()->json(Contact::all());
     }
 
     public function show($id)
