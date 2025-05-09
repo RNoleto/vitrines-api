@@ -238,24 +238,34 @@ class StoreController extends Controller
 
     public function registerContactClick($storeId, $contactId)
     {
-        // Validação dos IDs
-        if (!is_numeric($storeId) || !is_numeric($contactId)) {
-            return response()->json(['error' => 'IDs inválidos'], 400);
+        $store = Store::find($storeId);
+    
+        if (!$store) {
+            return response()->json(['error' => 'Loja não encontrada'], 404);
         }
     
-        try {
-            DB::table('contact_store')->insert([
-                'store_id' => $storeId,
-                'contact_id' => $contactId,
-                'created_at' => now(),
+        // Verifica se o contato está relacionado à loja
+        $exists = DB::table('contact_store')
+            ->where('store_id', $storeId)
+            ->where('contact_id', $contactId)
+            ->exists();
+    
+        if (!$exists) {
+            return response()->json(['error' => 'Contato não vinculado à loja'], 404);
+        }
+    
+        // Atualiza os campos visits e last_visited_at
+        DB::table('contact_store')
+            ->where('store_id', $storeId)
+            ->where('contact_id', $contactId)
+            ->update([
+                'visits' => DB::raw('visits + 1'),
+                'last_visited_at' => now(),
                 'updated_at' => now()
             ]);
         
-            return response()->json(['success' => true]);
-        
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Erro ao registrar clique'], 500);
-        }
+        return response()->json(['message' => 'Clique no contato registrado com sucesso']);
     }
+
 
 }
