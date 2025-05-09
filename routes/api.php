@@ -48,7 +48,7 @@ Route::get('/public/stores/{store}/contacts', [ContactController::class, 'public
 // Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 
 //Rotas Administrativas
-Route::middleware([FirebaseAuthenticate::class, 'role.admin'])->group(function () {
+Route::middleware([FirebaseAuthenticate::class, 'role:admin'])->group(function () {
     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });
 

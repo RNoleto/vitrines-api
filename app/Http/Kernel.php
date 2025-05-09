@@ -71,8 +71,6 @@ class Kernel extends HttpKernel
         'firebase.auth'   => \App\Http\Middleware\FirebaseAuthenticate::class,
 
         // ** middleware de roles **
-        'role'            => \App\Http\Middleware\CheckRole::class,
-        'role.admin' => \App\Http\Middleware\EnsureAdminRole::class,
-        
+        'role'            => \App\Http\Middleware\CheckRole::class,        
     ];
 }
