@@ -244,7 +244,7 @@ class StoreController extends Controller
         }
     
         try {
-            DB::table('contact_clicks')->insert([
+            DB::table('contact_store')->insert([
                 'store_id' => $storeId,
                 'contact_id' => $contactId,
                 'created_at' => now(),
