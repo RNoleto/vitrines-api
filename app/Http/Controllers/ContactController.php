@@ -117,12 +117,27 @@ class ContactController extends Controller
                 }
             }
         
-            // Cria o contato
-            $contact = $user->contacts()->create([
-                'name' => $request->name,
-                'whatsapp' => $request->whatsapp,
-                'photo' => $photoUrl,
-            ]);
+            // Cria ou restaura o contato para evitar erro de violação de chave única
+            $contact = Contact::withTrashed()
+                ->where('user_id', $user->id)
+                ->where('whatsapp', $request->whatsapp)
+                ->first();
+
+            if ($contact) {
+                // Restaura o contato se estiver soft-deletado e atualiza seus campos
+                $contact->restore();
+                $contact->update([
+                    'name' => $request->name,
+                    'photo' => $photoUrl ?? $contact->photo,
+                    'ativo' => 1
+                ]);
+            } else {
+                $contact = $user->contacts()->create([
+                    'name' => $request->name,
+                    'whatsapp' => $request->whatsapp,
+                    'photo' => $photoUrl,
+                ]);
+            }
         
             // Vincula as lojas
             $contact->stores()->sync($request->store_ids);
@@ -244,6 +259,21 @@ class ContactController extends Controller
                         \Log::error('Cloudinary update error: ' . $e->getMessage());
                         return response()->json(['error' => 'Erro ao enviar nova foto para o Cloudinary.'], 500);
                     }
+                }
+            }
+
+            // Se o whatsapp está sendo atualizado, verifica se já existe em outro contato
+            if ($request->has('whatsapp') && $request->whatsapp !== $contact->whatsapp) {
+                $duplicate = Contact::withTrashed()
+                    ->where('user_id', $user->id)
+                    ->where('whatsapp', $request->whatsapp)
+                    ->where('id', '!=', $contact->id)
+                    ->exists();
+
+                if ($duplicate) {
+                    return response()->json([
+                        'error' => 'Já existe outro contato cadastrado com este número de whatsapp.'
+                    ], 422);
                 }
             }
 
