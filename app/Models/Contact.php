@@ -27,6 +27,12 @@ class Contact extends Model
 
     public function getPhotoUrlAttribute()
     {
+        // Verifica se a foto já é uma URL completa (do Cloudinary ou outro serviço externo)
+        if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
+            return $this->photo;
+        }
+
+        // Se não for uma URL completa, assume que é imagem local
         return $this->photo ? asset("storage/{$this->photo}") : null;
     }
 }
