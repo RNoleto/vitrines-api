@@ -126,10 +126,11 @@ class ContactController extends Controller
             if ($contact) {
                 // Restaura o contato se estiver soft-deletado e atualiza seus campos
                 $contact->restore();
+                $contact->ativo = 1;
+                $contact->save();
                 $contact->update([
                     'name' => $request->name,
                     'photo' => $photoUrl ?? $contact->photo,
-                    'ativo' => 1
                 ]);
             } else {
                 $contact = $user->contacts()->create([

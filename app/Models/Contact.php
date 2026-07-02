@@ -9,7 +9,7 @@ class Contact extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'photo', 'name', 'whatsapp', 'deleted_at'];
+    protected $fillable = ['user_id', 'photo', 'name', 'whatsapp', 'ativo', 'deleted_at'];
 
     protected $appends = ['photo_url'];
 
