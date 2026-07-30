@@ -42,6 +42,11 @@ class StoreController extends Controller
 
     public function store(Request $request)
     {
+        // Se firebase_uid não foi enviado mas o usuário está autenticado pelo middleware, usa o do usuário logado
+        if ((!$request->has('firebase_uid') || $request->firebase_uid === 'undefined') && auth()->check()) {
+            $request->merge(['firebase_uid' => auth()->user()->firebase_uid]);
+        }
+
         if ($request->has('links') && is_array($request->links)) {
             $links = $request->links;
             foreach ($links as $key => $link) {
@@ -59,16 +64,16 @@ class StoreController extends Controller
         $request->validate([
             'name' => 'required|string',
             'firebase_uid' => 'required|string|exists:users,firebase_uid',
-            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            'logo' => 'nullable|file|mimetypes:image/jpeg,image/png,image/svg+xml,image/svg,image/webp,image/jpg,text/plain,text/xml|max:5120',
             'ativo' => 'integer',
-            'links' => 'array',
+            'links' => 'nullable|array',
             'links.*.icone' => 'required_with:links|string',
             'links.*.texto' => 'required_with:links|string',
             'links.*.url'   => 'required_with:links|url',
         ]);
 
         try {
-            $user = User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
+            $user = auth()->user() ?? User::where('firebase_uid', $request->firebase_uid)->firstOrFail();
 
             $logoUrl = null;
             if ($request->hasFile('logo')) {
@@ -86,7 +91,7 @@ class StoreController extends Controller
                 }
             }          
 
-            $baseSlug = Str::slug($request->name, '-', 'pr_BR');
+            $baseSlug = Str::slug($request->name, '-', 'pt_BR');
             $slug = !empty($baseSlug) ? $baseSlug : 'loja-sem-nome';
             $slug = $this->makeUniqueSlug($slug);
     
@@ -157,9 +162,9 @@ class StoreController extends Controller
 
         $request->validate([
             'name' => 'string',
-            'logo' => 'nullable|mimes:jpg,jpeg,png,svg,webp',
+            'logo' => 'nullable|file|mimetypes:image/jpeg,image/png,image/svg+xml,image/svg,image/webp,image/jpg,text/plain,text/xml|max:5120',
             'ativo' => 'integer',
-            'links' => 'array',
+            'links' => 'nullable|array',
             'links.*.icone' => 'required_with:links|string',
             'links.*.texto' => 'required_with:links|string',
             'links.*.url'   => 'required_with:links|url',
@@ -223,7 +228,7 @@ class StoreController extends Controller
 
     public function showBySlug($slug)
     {
-        return Store::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
+        $store = Store::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->where('ativo', 1)
             ->with(['links', 'contacts'])
             ->firstOrFail();
@@ -306,6 +311,5 @@ class StoreController extends Controller
         
         return response()->json(['message' => 'Clique no contato registrado com sucesso']);
     }
-
 
 }

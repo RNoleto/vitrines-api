@@ -19,8 +19,10 @@ class AppServiceProvider extends ServiceProvider
             $factory = new Factory;
             $credentials = env('FIREBASE_CREDENTIALS');
 
-            if ($credentials) {
-                $factory = $factory->withServiceAccount($credentials);
+            if ($credentials && file_exists(base_path($credentials))) {
+                $factory = $factory->withServiceAccount(base_path($credentials));
+            } else if ($credentials && str_starts_with(trim($credentials), '{')) {
+                $factory = $factory->withServiceAccount(json_decode($credentials, true));
             } else if (app()->environment('local')) {
                 // Em ambiente local offline, injeta um mock para evitar erro ao construir a classe
                 $dummyCredentials = [
