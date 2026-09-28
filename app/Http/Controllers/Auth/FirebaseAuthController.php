@@ -67,6 +67,18 @@ class FirebaseAuthController extends Controller
             }
 
             $user = User::where('firebase_uid', $firebaseUid)->first();
+
+            if (!$user && $email) {
+                // Se não encontrou pelo firebase_uid, verifica se já existe usuário com o mesmo e-mail
+                $user = User::where('email', $email)->first();
+                if ($user) {
+                    $user->firebase_uid = $firebaseUid;
+                    if ($name && ($user->name === 'user@example.com' || str_contains($user->name, 'local-user') || !$user->name)) {
+                        $user->name = $name;
+                    }
+                    $user->save();
+                }
+            }
         
             if (!$user) {
                 $user = User::create([
