@@ -96,11 +96,12 @@ class StoreController extends Controller
             $slug = $this->makeUniqueSlug($slug);
     
             $store = Store::create([
-                'user_id' => $user->id,
-                'name'    => $request->name,
-                'slug'    => $slug,
-                'logo'    => $logoUrl,
-                'ativo'   => $request->ativo ?? 1,
+                'user_id'     => $user->id,
+                'name'        => $request->name,
+                'slug'        => $slug,
+                'logo'        => $logoUrl,
+                'description' => $request->description ?? null,
+                'ativo'       => $request->ativo ?? 1,
             ]);
 
             foreach ($request->links ?? [] as $link) {
@@ -145,6 +146,7 @@ class StoreController extends Controller
     public function updateCustomContent(Request $request, $id)
     {
         $request->validate([
+            'description' => 'nullable|string|max:500',
             'bio' => 'nullable|string|max:3000',
             'metrics' => 'nullable|array',
             'metrics.*.value' => 'required_with:metrics|string|max:100',
@@ -157,9 +159,10 @@ class StoreController extends Controller
         try {
             $store = Store::findOrFail($id);
             $store->update([
-                'bio'     => $request->bio,
-                'metrics' => $request->metrics,
-                'faqs'    => $request->faqs,
+                'description' => $request->description,
+                'bio'         => $request->bio,
+                'metrics'     => $request->metrics,
+                'faqs'        => $request->faqs,
             ]);
 
             return response()->json($store);
