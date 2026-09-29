@@ -6,8 +6,13 @@ use App\Http\Controllers\StoreController;
 use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ThemeController;
 
 Route::post('/login', [FirebaseAuthController::class, 'login']);
+
+// Rotas de Temas Visuais (Público / Autenticado)
+Route::get('/themes', [ThemeController::class, 'index']);
+Route::get('/themes/{id}', [ThemeController::class, 'show']);
 
 // Rotas de Cadastro de Lojas
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
@@ -62,6 +67,12 @@ Route::middleware([
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
     Route::get('/public/stores', [StoreController::class, 'publicList']);
     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
+
+    // CRUD de Temas Visuais do Sistema & Customizados
+    Route::post('/themes', [ThemeController::class, 'store']);
+    Route::put('/themes/{id}', [ThemeController::class, 'update']);
+    Route::delete('/themes/{id}', [ThemeController::class, 'destroy']);
 });
+
 
 
