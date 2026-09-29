@@ -124,7 +124,7 @@ class StoreController extends Controller
     public function updateTheme(Request $request, $id)
     {
         $request->validate([
-            'theme' => 'required|string|max:50'
+            'theme' => 'required|string|max:255'
         ]);
     
         try {
