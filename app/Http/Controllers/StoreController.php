@@ -142,6 +142,35 @@ class StoreController extends Controller
         }
     }
 
+    public function updateCustomContent(Request $request, $id)
+    {
+        $request->validate([
+            'bio' => 'nullable|string|max:3000',
+            'metrics' => 'nullable|array',
+            'metrics.*.value' => 'required_with:metrics|string|max:100',
+            'metrics.*.label' => 'required_with:metrics|string|max:100',
+            'faqs' => 'nullable|array',
+            'faqs.*.question' => 'required_with:faqs|string|max:255',
+            'faqs.*.answer'   => 'required_with:faqs|string|max:2000',
+        ]);
+
+        try {
+            $store = Store::findOrFail($id);
+            $store->update([
+                'bio'     => $request->bio,
+                'metrics' => $request->metrics,
+                'faqs'    => $request->faqs,
+            ]);
+
+            return response()->json($store);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erro ao atualizar conteúdo personalizado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function update(Request $request, $id)
     {
         $store = Store::findOrFail($id);

@@ -16,6 +16,7 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::post('/stores', [StoreController::class, 'store']);
     Route::put('/stores/{id}', [StoreController::class, 'update']);
     Route::patch('/stores/{store}/theme', [StoreController::class, 'updateTheme']);
+    Route::patch('/stores/{store}/custom-content', [StoreController::class, 'updateCustomContent']);
     Route::delete('/stores/{id}', [StoreController::class, 'destroy']);
 });
 
