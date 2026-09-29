@@ -16,6 +16,7 @@ class Theme extends Model
         'is_premium',
         'category',
         'font_family',
+        'icon_family',
         'layout_style',
         'card_style',
         'bg_type',

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('is_premium')->default(0);
             $table->string('category')->default('standard');
             $table->string('font_family')->default('sans');
+            $table->string('icon_family')->nullable()->default('fontawesome-6');
             $table->string('layout_style')->default('standard');
             $table->string('card_style')->default('flat');
             $table->string('bg_type')->default('solid');

@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\FontController;
+use App\Http\Controllers\IconFamilyController;
 
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
@@ -17,6 +18,9 @@ Route::get('/themes/{id}', [ThemeController::class, 'show']);
 
 // Rotas de Fontes Tipográficas (Público / Autenticado)
 Route::get('/fonts', [FontController::class, 'index']);
+
+// Rotas de Famílias de Ícones (Público / Autenticado)
+Route::get('/icon-families', [IconFamilyController::class, 'index']);
 
 // Rotas de Cadastro de Lojas
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
@@ -80,6 +84,10 @@ Route::middleware([
     // Gestão de Fontes Tipográficas
     Route::post('/fonts', [FontController::class, 'store']);
     Route::delete('/fonts/{id}', [FontController::class, 'destroy']);
+
+    // Gestão de Famílias de Ícones
+    Route::post('/icon-families', [IconFamilyController::class, 'store']);
+    Route::delete('/icon-families/{id}', [IconFamilyController::class, 'destroy']);
 });
 
 
