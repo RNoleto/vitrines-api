@@ -7,12 +7,16 @@ use App\Http\Middleware\FirebaseAuthenticate;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\FontController;
 
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
 // Rotas de Temas Visuais (Público / Autenticado)
 Route::get('/themes', [ThemeController::class, 'index']);
 Route::get('/themes/{id}', [ThemeController::class, 'show']);
+
+// Rotas de Fontes Tipográficas (Público / Autenticado)
+Route::get('/fonts', [FontController::class, 'index']);
 
 // Rotas de Cadastro de Lojas
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
@@ -72,6 +76,10 @@ Route::middleware([
     Route::post('/themes', [ThemeController::class, 'store']);
     Route::put('/themes/{id}', [ThemeController::class, 'update']);
     Route::delete('/themes/{id}', [ThemeController::class, 'destroy']);
+
+    // Gestão de Fontes Tipográficas
+    Route::post('/fonts', [FontController::class, 'store']);
+    Route::delete('/fonts/{id}', [FontController::class, 'destroy']);
 });
 
 
