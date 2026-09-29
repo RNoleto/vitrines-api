@@ -21,6 +21,12 @@ return new class extends Migration
             $table->string('icon_family')->nullable()->default('fontawesome-6');
             $table->string('layout_style')->default('standard');
             $table->string('card_style')->default('flat');
+            $table->string('btn_shape')->nullable()->default('pill');
+            $table->string('btn_shadow')->nullable()->default('soft');
+            $table->string('avatar_shape')->nullable()->default('circle');
+            $table->integer('show_social_footer')->default(1);
+            $table->string('social_style')->nullable()->default('minimal');
+            $table->json('elements')->nullable();
             $table->string('bg_type')->default('solid');
             $table->text('bg_image_url')->nullable();
             $table->string('bg_attachment')->nullable()->default('scroll');
