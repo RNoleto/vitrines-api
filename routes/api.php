@@ -57,7 +57,10 @@ Route::middleware([
         return response()->json(['message' => 'Bem-vindo, administrador']);
     });
     Route::get('/users', [UserController::class, 'users']);
+    Route::put('/admin/users/{id}/role', [UserController::class, 'updateRole']);
+    Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
     Route::get('/public/stores', [StoreController::class, 'publicList']);
     Route::get('/admin/contacts', [ContactController::class, 'adminIndex']);
 });
+
 
