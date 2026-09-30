@@ -30,7 +30,12 @@ class Store extends Model
         'ref_cod_theme'      => 'integer',
     ];
 
-    protected $appends = ['logo_url'];
+    protected $appends = ['logo_url', 'theme'];
+
+    public function getThemeAttribute()
+    {
+        return $this->attributes['ref_cod_theme'] ?? null;
+    }
 
     public function user() {
         return $this->belongsTo(User::class);
