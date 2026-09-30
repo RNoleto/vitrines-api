@@ -153,7 +153,7 @@ class StoreController extends Controller
         $request->validate([
             'description'        => 'nullable|string|max:500',
             'subtitle'           => 'nullable|string|max:500',
-            'banner_image'       => 'nullable|string|max:2000',
+            'banner_image'       => 'nullable|string',
             'show_banner'        => 'nullable',
             'bio'                => 'nullable|string|max:3000',
             'metrics'            => 'nullable|array',
