@@ -123,4 +123,97 @@ class DiscordNotifier
             $webhook->update(['last_sent_at' => now()]);
         }
     }
+
+    /**
+     * Send database migration status to active migration webhooks.
+     */
+    public static function notifyMigration(string $status, ?string $customMessage = null, array $extra = []): void
+    {
+        $webhooks = DiscordWebhook::where('is_active', true)
+            ->where(function($query) use ($status) {
+                $query->whereIn('channel_type', ['migrations-log', 'migrations', 'errors-log'])
+                      ->orWhereJsonContains('events', 'migration.' . $status)
+                      ->orWhereJsonContains('events', 'migration.execution');
+            })
+            ->get();
+
+        if ($webhooks->isEmpty()) {
+            return;
+        }
+
+        $config = match ($status) {
+            'started', 'in_progress', 'executing' => [
+                'title' => '⏳ Execução de Migrations Iniciada',
+                'description' => $customMessage ?: 'As migrations do banco de dados estão sendo executadas em produção no GitHub Actions...',
+                'color' => 0xF59E0B, // Yellow / Amber #F59E0B
+                'badge' => '🟡 EM EXECUÇÃO',
+            ],
+            'success', 'completed' => [
+                'title' => '✅ Migrations Executadas com Sucesso',
+                'description' => $customMessage ?: 'Todas as migrations do banco de dados foram aplicadas com sucesso sem erros!',
+                'color' => 0x10B981, // Emerald Green #10B981
+                'badge' => '🟢 SUCESSO',
+            ],
+            'failed', 'error' => [
+                'title' => '❌ Falha na Execução das Migrations',
+                'description' => $customMessage ?: 'Ocorreu um erro ao aplicar as migrations no banco de dados em produção!',
+                'color' => 0xEF4444, // Red #EF4444
+                'badge' => '🔴 ERRO / FALHA',
+            ],
+            default => [
+                'title' => '🗄️ Notificação de Migration',
+                'description' => $customMessage ?: 'Atualização sobre o processo de migrations.',
+                'color' => 0x3B82F6, // Blue #3B82F6
+                'badge' => '🔵 INFO',
+            ]
+        };
+
+        $fields = [
+            [
+                'name' => '📌 Status',
+                'value' => $config['badge'],
+                'inline' => true,
+            ],
+            [
+                'name' => '🌐 Ambiente',
+                'value' => '`' . strtoupper(config('app.env', 'production')) . '`',
+                'inline' => true,
+            ],
+            [
+                'name' => '⏱️ Horário',
+                'value' => now()->format('d/m/Y H:i:s'),
+                'inline' => true,
+            ],
+        ];
+
+        if (!empty($extra['details'])) {
+            $fields[] = [
+                'name' => '📝 Detalhes / Log',
+                'value' => '```' . "\n" . substr($extra['details'], 0, 1000) . "\n" . '```',
+                'inline' => false,
+            ];
+        }
+
+        $payload = [
+            'username' => 'Vitrines Database Sentinel',
+            'avatar_url' => 'https://raw.githubusercontent.com/fortawesome/Font-Awesome/6.x/svgs/solid/database.svg',
+            'embeds' => [
+                [
+                    'title' => $config['title'],
+                    'description' => $config['description'],
+                    'color' => $config['color'],
+                    'fields' => $fields,
+                    'footer' => [
+                        'text' => 'Vitrines Database Sentinel • GitHub Actions Deploy',
+                    ],
+                    'timestamp' => now()->toIso8601String(),
+                ]
+            ]
+        ];
+
+        foreach ($webhooks as $webhook) {
+            self::sendPayload($webhook->webhook_url, $payload);
+            $webhook->update(['last_sent_at' => now()]);
+        }
+    }
 }

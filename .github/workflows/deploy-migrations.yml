@@ -37,6 +37,20 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-dev
 
+      - name: Notify Discord - Migrations Started
+        env:
+          APP_ENV: production
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
+        run: php artisan discord:notify-migration started || true
+
       - name: Run Database Migrations
         env:
           APP_ENV: production
@@ -50,3 +64,33 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
         run: php artisan migrate --force
+
+      - name: Notify Discord - Migrations Success
+        if: success()
+        env:
+          APP_ENV: production
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
+        run: php artisan discord:notify-migration success || true
+
+      - name: Notify Discord - Migrations Failure
+        if: failure()
+        env:
+          APP_ENV: production
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
+        run: php artisan discord:notify-migration failed --message="Ocorreu um erro durante a execução do comando php artisan migrate --force no GitHub Actions" || true

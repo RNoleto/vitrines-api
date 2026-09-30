@@ -27,6 +27,18 @@ Como a rede local possui bloqueios de firewall para acesso a bancos de dados ext
 
 ---
 
+## 🤖 Notificações de Migrations no Discord em Tempo Real:
+
+O workflow `.github/workflows/deploy-migrations.yml` está integrado com o módulo de Webhooks do Discord (`DiscordNotifier`). 
+
+Quando as migrations forem executadas na branch `main`, as seguintes notificações são disparadas automaticamente para os bots cadastrados no painel administrativo com o tipo `migrations-log` ou `errors-log`:
+
+- 🟡 **Início da Execução**: Disparado assim que a rotina de migrations é iniciada no GitHub Actions.
+- 🟢 **Sucesso**: Disparado quando todas as migrations são aplicadas com sucesso.
+- 🔴 **Falha / Erro**: Disparado caso ocorra qualquer erro de execução ou falha de conexão com o banco de dados.
+
+---
+
 ## 🔄 Como Funciona a Automação:
 
 - **Gatilho de Disparo Automático**: Qualquer push ou merge na branch `main` dispara o workflow `.github/workflows/deploy-migrations.yml`.
