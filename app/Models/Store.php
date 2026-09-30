@@ -17,12 +17,13 @@ class Store extends Model
 
     protected $fillable = [
         'user_id', 'name', 'slug', 'logo', 'ativo', 'ref_cod_theme', 
-        'description', 'subtitle', 'banner_image', 'bio', 'metrics', 'show_metrics', 'faqs', 'social_networks', 'show_social_footer'
+        'description', 'subtitle', 'banner_image', 'show_banner', 'bio', 'metrics', 'show_metrics', 'faqs', 'social_networks', 'show_social_footer'
     ];
 
     protected $casts = [
         'metrics'            => 'array',
         'show_metrics'       => 'integer',
+        'show_banner'        => 'integer',
         'faqs'               => 'array',
         'social_networks'    => 'array',
         'show_social_footer' => 'integer',
