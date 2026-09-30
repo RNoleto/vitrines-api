@@ -146,23 +146,27 @@ class StoreController extends Controller
     public function updateCustomContent(Request $request, $id)
     {
         $request->validate([
-            'description' => 'nullable|string|max:500',
-            'bio' => 'nullable|string|max:3000',
-            'metrics' => 'nullable|array',
-            'metrics.*.value' => 'required_with:metrics|string|max:100',
-            'metrics.*.label' => 'required_with:metrics|string|max:100',
-            'faqs' => 'nullable|array',
-            'faqs.*.question' => 'required_with:faqs|string|max:255',
-            'faqs.*.answer'   => 'required_with:faqs|string|max:2000',
+            'description'        => 'nullable|string|max:500',
+            'bio'                => 'nullable|string|max:3000',
+            'metrics'            => 'nullable|array',
+            'metrics.*.value'    => 'required_with:metrics|string|max:100',
+            'metrics.*.label'    => 'required_with:metrics|string|max:100',
+            'faqs'               => 'nullable|array',
+            'faqs.*.question'    => 'required_with:faqs|string|max:255',
+            'faqs.*.answer'      => 'required_with:faqs|string|max:2000',
+            'social_networks'    => 'nullable|array',
+            'show_social_footer' => 'nullable',
         ]);
 
         try {
             $store = Store::findOrFail($id);
             $store->update([
-                'description' => $request->description,
-                'bio'         => $request->bio,
-                'metrics'     => $request->metrics,
-                'faqs'        => $request->faqs,
+                'description'        => $request->description,
+                'bio'                => $request->bio,
+                'metrics'            => $request->metrics,
+                'faqs'               => $request->faqs,
+                'social_networks'    => $request->has('social_networks') ? $request->social_networks : $store->social_networks,
+                'show_social_footer' => $request->has('show_social_footer') ? ($request->show_social_footer ? 1 : 0) : $store->show_social_footer,
             ]);
 
             return response()->json($store);

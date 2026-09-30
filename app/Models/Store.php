@@ -13,11 +13,16 @@ class Store extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'name', 'slug', 'logo', 'ativo', 'theme', 'description', 'bio', 'metrics', 'faqs'];
+    protected $fillable = [
+        'user_id', 'name', 'slug', 'logo', 'ativo', 'theme', 
+        'description', 'bio', 'metrics', 'faqs', 'social_networks', 'show_social_footer'
+    ];
 
     protected $casts = [
-        'metrics' => 'array',
-        'faqs'    => 'array',
+        'metrics'            => 'array',
+        'faqs'               => 'array',
+        'social_networks'    => 'array',
+        'show_social_footer' => 'integer',
     ];
 
     protected $appends = ['logo_url'];
