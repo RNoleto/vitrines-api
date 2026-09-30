@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ThemeSeeder::class,
             FontSeeder::class,
+            IconFamilySeeder::class,
+            DiscordWebhookSeeder::class,
         ]);
     }
 }

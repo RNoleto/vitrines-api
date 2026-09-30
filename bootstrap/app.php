@@ -18,4 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->report(function (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Erro de Validação API:', $e->errors());
         });
+        $exceptions->report(function (\Throwable $e) {
+            if (!($e instanceof \Illuminate\Validation\ValidationException) && !($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException)) {
+                \App\Services\DiscordNotifier::notifyError($e);
+            }
+        });
     })->create();

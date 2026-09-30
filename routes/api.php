@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\FontController;
 use App\Http\Controllers\IconFamilyController;
+use App\Http\Controllers\DiscordWebhookController;
 
 Route::post('/login', [FirebaseAuthController::class, 'login']);
 
@@ -88,6 +89,13 @@ Route::middleware([
     // Gestão de Famílias de Ícones
     Route::post('/icon-families', [IconFamilyController::class, 'store']);
     Route::delete('/icon-families/{id}', [IconFamilyController::class, 'destroy']);
+
+    // Gestão de Webhooks e Bots do Discord
+    Route::get('/discord-webhooks', [DiscordWebhookController::class, 'index']);
+    Route::post('/discord-webhooks', [DiscordWebhookController::class, 'store']);
+    Route::put('/discord-webhooks/{id}', [DiscordWebhookController::class, 'update']);
+    Route::delete('/discord-webhooks/{id}', [DiscordWebhookController::class, 'destroy']);
+    Route::post('/discord-webhooks/{id}/test', [DiscordWebhookController::class, 'sendTest']);
 });
 
 
