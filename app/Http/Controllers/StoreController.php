@@ -152,6 +152,8 @@ class StoreController extends Controller
     {
         $request->validate([
             'description'        => 'nullable|string|max:500',
+            'subtitle'           => 'nullable|string|max:500',
+            'banner_image'       => 'nullable|string|max:2000',
             'bio'                => 'nullable|string|max:3000',
             'metrics'            => 'nullable|array',
             'metrics.*.value'    => 'required_with:metrics|string|max:100',
@@ -167,6 +169,8 @@ class StoreController extends Controller
             $store = Store::findOrFail($id);
             $store->update([
                 'description'        => $request->description,
+                'subtitle'           => $request->subtitle,
+                'banner_image'       => $request->banner_image,
                 'bio'                => $request->bio,
                 'metrics'            => $request->metrics,
                 'faqs'               => $request->faqs,

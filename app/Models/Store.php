@@ -17,7 +17,7 @@ class Store extends Model
 
     protected $fillable = [
         'user_id', 'name', 'slug', 'logo', 'ativo', 'ref_cod_theme', 
-        'description', 'bio', 'metrics', 'faqs', 'social_networks', 'show_social_footer'
+        'description', 'subtitle', 'banner_image', 'bio', 'metrics', 'faqs', 'social_networks', 'show_social_footer'
     ];
 
     protected $casts = [
