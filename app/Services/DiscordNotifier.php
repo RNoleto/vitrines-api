@@ -75,14 +75,18 @@ class DiscordNotifier
      */
     public static function notifyError(\Throwable $exception, array $extra = []): void
     {
-        $webhooks = DiscordWebhook::where('is_active', true)
-            ->where(function($query) {
-                $query->where('channel_type', 'errors-log')
-                      ->orWhereJsonContains('events', 'system.error');
-            })
-            ->get();
+        try {
+            $webhooks = DiscordWebhook::where('is_active', true)
+                ->where(function($query) {
+                    $query->where('channel_type', 'errors-log')
+                          ->orWhereJsonContains('events', 'system.error');
+                })
+                ->get();
 
-        if ($webhooks->isEmpty()) {
+            if ($webhooks->isEmpty()) {
+                return;
+            }
+        } catch (\Throwable $e) {
             return;
         }
 
@@ -129,15 +133,19 @@ class DiscordNotifier
      */
     public static function notifyMigration(string $status, ?string $customMessage = null, array $extra = []): void
     {
-        $webhooks = DiscordWebhook::where('is_active', true)
-            ->where(function($query) use ($status) {
-                $query->whereIn('channel_type', ['migrations-log', 'migrations', 'errors-log'])
-                      ->orWhereJsonContains('events', 'migration.' . $status)
-                      ->orWhereJsonContains('events', 'migration.execution');
-            })
-            ->get();
+        try {
+            $webhooks = DiscordWebhook::where('is_active', true)
+                ->where(function($query) use ($status) {
+                    $query->whereIn('channel_type', ['migrations-log', 'migrations', 'errors-log'])
+                          ->orWhereJsonContains('events', 'migration.' . $status)
+                          ->orWhereJsonContains('events', 'migration.execution');
+                })
+                ->get();
 
-        if ($webhooks->isEmpty()) {
+            if ($webhooks->isEmpty()) {
+                return;
+            }
+        } catch (\Throwable $e) {
             return;
         }
 

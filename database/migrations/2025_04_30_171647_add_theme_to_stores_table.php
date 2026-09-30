@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stores', function (Blueprint $table) {
-            $table->string('theme')->nullable()->after('ativo');
+            $table->unsignedBigInteger('ref_cod_theme')->nullable()->after('ativo');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('stores', function (Blueprint $table) {
-            $table->dropColumn('theme');
+            $table->dropColumn('ref_cod_theme');
         });
     }
 };

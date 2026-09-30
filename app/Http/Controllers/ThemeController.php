@@ -15,13 +15,6 @@ class ThemeController extends Controller
     public function index()
     {
         $themes = Theme::orderBy('is_premium', 'desc')->orderBy('created_at', 'desc')->get();
-
-        // Se o banco estiver sem nenhum tema, executa a seed de backup automaticamente
-        if ($themes->isEmpty()) {
-            (new ThemeSeeder())->run();
-            $themes = Theme::orderBy('is_premium', 'desc')->orderBy('created_at', 'desc')->get();
-        }
-
         return response()->json($themes);
     }
 
@@ -70,36 +63,31 @@ class ThemeController extends Controller
             'backdrop_blur' => 'nullable|integer',
         ]);
 
-        $slugId = !empty($validated['id']) ? Str::slug($validated['id']) : 'custom-' . Str::slug($validated['label']) . '-' . time();
-
-        $theme = Theme::updateOrCreate(
-            ['id' => $slugId],
-            [
-                'label' => $validated['label'],
-                'is_custom' => true,
-                'is_premium' => $validated['is_premium'] ?? true,
-                'category' => $validated['category'] ?? 'premium',
-                'font_family' => $validated['font_family'] ?? 'serif',
-                'icon_family' => $validated['icon_family'] ?? 'fontawesome-6',
-                'layout_style' => $validated['layout_style'] ?? 'portrait-hero',
-                'card_style' => $validated['card_style'] ?? 'gold-bordered',
-                'btn_shape' => $validated['btn_shape'] ?? 'pill',
-                'btn_shadow' => $validated['btn_shadow'] ?? 'soft',
-                'avatar_shape' => $validated['avatar_shape'] ?? 'circle',
-                'show_social_footer' => $validated['show_social_footer'] ?? true,
-                'social_style' => $validated['social_style'] ?? 'minimal',
-                'elements' => $validated['elements'] ?? null,
-                'bg_type' => $validated['bg_type'] ?? 'solid',
-                'bg_image_url' => $validated['bg_image_url'] ?? null,
-                'bg_attachment' => $validated['bg_attachment'] ?? 'scroll',
-                'bg_size' => $validated['bg_size'] ?? 'cover',
-                'bg_position' => $validated['bg_position'] ?? 'center',
-                'bg_animation_type' => $validated['bg_animation_type'] ?? null,
-                'bg_overlay' => $validated['bg_overlay'] ?? ['enabled' => false, 'color' => '#000000', 'opacity' => 0, 'blur' => 0],
-                'colors' => $validated['colors'] ?? ['background' => '#FFFFFF', 'foreground' => '#F8FAFC', 'primary' => '#6366F1', 'accent' => '#4F46E5', 'text' => '#1E293B'],
-                'backdrop_blur' => $validated['backdrop_blur'] ?? 0,
-            ]
-        );
+        $theme = Theme::create([
+            'label' => $validated['label'],
+            'is_custom' => true,
+            'is_premium' => $validated['is_premium'] ?? true,
+            'category' => $validated['category'] ?? 'premium',
+            'font_family' => $validated['font_family'] ?? 'serif',
+            'icon_family' => $validated['icon_family'] ?? 'fontawesome-6',
+            'layout_style' => $validated['layout_style'] ?? 'portrait-hero',
+            'card_style' => $validated['card_style'] ?? 'gold-bordered',
+            'btn_shape' => $validated['btn_shape'] ?? 'pill',
+            'btn_shadow' => $validated['btn_shadow'] ?? 'soft',
+            'avatar_shape' => $validated['avatar_shape'] ?? 'circle',
+            'show_social_footer' => $validated['show_social_footer'] ?? true,
+            'social_style' => $validated['social_style'] ?? 'minimal',
+            'elements' => $validated['elements'] ?? null,
+            'bg_type' => $validated['bg_type'] ?? 'solid',
+            'bg_image_url' => $validated['bg_image_url'] ?? null,
+            'bg_attachment' => $validated['bg_attachment'] ?? 'scroll',
+            'bg_size' => $validated['bg_size'] ?? 'cover',
+            'bg_position' => $validated['bg_position'] ?? 'center',
+            'bg_animation_type' => $validated['bg_animation_type'] ?? null,
+            'bg_overlay' => $validated['bg_overlay'] ?? ['enabled' => false, 'color' => '#000000', 'opacity' => 0, 'blur' => 0],
+            'colors' => $validated['colors'] ?? ['background' => '#FFFFFF', 'foreground' => '#F8FAFC', 'primary' => '#6366F1', 'accent' => '#4F46E5', 'text' => '#1E293B'],
+            'backdrop_blur' => $validated['backdrop_blur'] ?? 0,
+        ]);
 
         return response()->json($theme, 201);
     }

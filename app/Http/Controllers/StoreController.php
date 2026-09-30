@@ -125,16 +125,21 @@ class StoreController extends Controller
     public function updateTheme(Request $request, $id)
     {
         $request->validate([
-            'theme' => 'required|string|max:255'
+            'ref_cod_theme' => 'nullable',
+            'theme'         => 'nullable'
         ]);
     
         try {
             $store = Store::findOrFail($id);
+            $themeId = $request->ref_cod_theme ?? $request->theme;
+
+            $refCodTheme = ($themeId && $themeId !== 'default' && is_numeric($themeId)) ? (int) $themeId : null;
+
             $store->update([
-                'theme' => $request->theme
+                'ref_cod_theme' => $refCodTheme
             ]);
         
-            return response()->json($store);
+            return response()->json($store->load('theme'));
             
         } catch (\Exception $e) {
             return response()->json([
@@ -266,7 +271,7 @@ class StoreController extends Controller
     {
         $store = Store::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->where('ativo', 1)
-            ->with(['links', 'contacts'])
+            ->with(['links', 'contacts', 'theme'])
             ->firstOrFail();
 
         $store->increment('visits');

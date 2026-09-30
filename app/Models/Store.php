@@ -9,12 +9,14 @@ use App\Models\Contact;
 use Illuminate\Support\Str;
 
 
+use App\Models\Theme;
+
 class Store extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'name', 'slug', 'logo', 'ativo', 'theme', 
+        'user_id', 'name', 'slug', 'logo', 'ativo', 'ref_cod_theme', 
         'description', 'bio', 'metrics', 'faqs', 'social_networks', 'show_social_footer'
     ];
 
@@ -23,12 +25,17 @@ class Store extends Model
         'faqs'               => 'array',
         'social_networks'    => 'array',
         'show_social_footer' => 'integer',
+        'ref_cod_theme'      => 'integer',
     ];
 
     protected $appends = ['logo_url'];
 
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function theme() {
+        return $this->belongsTo(Theme::class, 'ref_cod_theme');
     }
 
     public function links() {
