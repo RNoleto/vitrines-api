@@ -106,7 +106,7 @@ class ContactController extends Controller
                 if (app()->environment('local') || !env('CLOUDINARY_URL')) {
                     // Local fallback: Salva localmente no disco 'public'
                     $path = $request->file('photo')->store('contacts', 'public');
-                    $photoUrl = asset('storage/' . $path);
+                    $photoUrl = $path;
                 } else {
                     try {
                         $uploaded = Cloudinary::uploadApi()->upload(
@@ -252,7 +252,7 @@ class ContactController extends Controller
                 if (app()->environment('local') || !env('CLOUDINARY_URL')) {
                     // Local fallback: Salva localmente no disco 'public'
                     $path = $request->file('photo')->store('contacts', 'public');
-                    $contact->photo = asset('storage/' . $path);
+                    $contact->photo = $path;
                 } else {
                     try {
                         $uploaded = Cloudinary::uploadApi()->upload(

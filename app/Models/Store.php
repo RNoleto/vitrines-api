@@ -51,13 +51,30 @@ class Store extends Model
 
     public function getLogoUrlAttribute()
     {
-        // Verifica se a logo já é uma URL completa (do Cloudinary ou outro serviço externo)
-        if (filter_var($this->logo, FILTER_VALIDATE_URL)) {
-            return $this->logo;  // Retorna a URL completa caso seja do Cloudinary
+        if (empty($this->logo)) {
+            return null;
         }
 
-        // Se não for uma URL completa, então assume que é uma imagem armazenada localmente
-        return $this->logo ? asset("storage/{$this->logo}") : null;
+        // Se a logo for uma URL do Cloudinary (ex: https://res.cloudinary.com/...)
+        if (Str::contains($this->logo, 'cloudinary.com')) {
+            return $this->logo;
+        }
+
+        $path = $this->logo;
+
+        // Se o valor salvo no banco contiver URL antiga/local (ex: http://127.0.0.1:8000/storage/logos/abc.jpg)
+        if (preg_match('#storage/(.+)$#i', $path, $matches)) {
+            $path = $matches[1];
+        }
+
+        $url = asset("storage/{$path}");
+
+        // Se a requisição atual for HTTPS ou estiver em ambiente production / atrás de proxy SSL
+        if (request()->secure() || app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
+            $url = Str::replaceFirst('http://', 'https://', $url);
+        }
+
+        return $url;
     }
 
     public function contacts()

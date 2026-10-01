@@ -27,12 +27,26 @@ class Contact extends Model
 
     public function getPhotoUrlAttribute()
     {
-        // Verifica se a foto já é uma URL completa (do Cloudinary ou outro serviço externo)
-        if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
+        if (empty($this->photo)) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Str::contains($this->photo, 'cloudinary.com')) {
             return $this->photo;
         }
 
-        // Se não for uma URL completa, assume que é imagem local
-        return $this->photo ? asset("storage/{$this->photo}") : null;
+        $path = $this->photo;
+
+        if (preg_match('#storage/(.+)$#i', $path, $matches)) {
+            $path = $matches[1];
+        }
+
+        $url = asset("storage/{$path}");
+
+        if (request()->secure() || app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
+            $url = \Illuminate\Support\Str::replaceFirst('http://', 'https://', $url);
+        }
+
+        return $url;
     }
 }

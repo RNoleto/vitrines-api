@@ -80,7 +80,7 @@ class StoreController extends Controller
                 if (app()->environment('local') || !env('CLOUDINARY_URL')) {
                     // Local fallback: Salva localmente no disco 'public'
                     $path = $request->file('logo')->store('logos', 'public');
-                    $logoUrl = asset('storage/' . $path);
+                    $logoUrl = $path;
                 } else {
                     try {
                         $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
@@ -223,7 +223,7 @@ class StoreController extends Controller
             if (app()->environment('local') || !env('CLOUDINARY_URL')) {
                 // Local fallback: Salva localmente no disco 'public'
                 $path = $request->file('logo')->store('logos', 'public');
-                $store->logo = asset('storage/' . $path);
+                $store->logo = $path;
             } else {
                 try {
                     $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
