@@ -27,6 +27,7 @@ Route::get('/icon-families', [IconFamilyController::class, 'index']);
 Route::middleware(FirebaseAuthenticate::class)->group(function(){
     Route::get('/stores', [StoreController::class, 'index']);
     Route::get('/stores/{id}', [StoreController::class, 'show']);
+    Route::get('/stores/{id}/analytics', [StoreController::class, 'analytics']);
     Route::post('/stores', [StoreController::class, 'store']);
     Route::put('/stores/{id}', [StoreController::class, 'update']);
     Route::patch('/stores/{store}/theme', [StoreController::class, 'updateTheme']);
