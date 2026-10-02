@@ -93,16 +93,16 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
-            // 'sslmode' => env('DB_SSLMODE', 'require'), //Campo não funciona para o banco local
-            'options' => extension_loaded('pdo_pgsql') ? [
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'options' => extension_loaded('pdo_pgsql') ? array_filter([
                 PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_EMULATE_PREPARES => true,
                 PDO::ATTR_STRINGIFY_FETCHES => false,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_TIMEOUT => 5,
-                'options' => '--endpoint=ep-cool-smoke-a54is86l',
-            ] : [],
+                PDO::ATTR_TIMEOUT => 10,
+                'options' => env('DB_OPTIONS'),
+            ]) : [],
         ],
 
 

@@ -37,60 +37,109 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-dev
 
+      - name: Validate GitHub Secrets & Configure Environment
+        id: env-setup
+        env:
+          SECRET_APP_KEY: ${{ secrets.APP_KEY }}
+          SECRET_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_DB_HOST: ${{ secrets.DB_HOST }}
+        run: |
+          echo "Verificando segredos de conexão do banco de dados..."
+          MISSING=0
+          if [ -z "$SECRET_APP_KEY" ]; then
+            echo "❌ ERRO CRÍTICO: O segredo 'APP_KEY' não está cadastrado nos Secrets do repositório no GitHub!"
+            MISSING=1
+          fi
+          if [ -z "$SECRET_DATABASE_URL" ] && [ -z "$SECRET_DB_HOST" ]; then
+            echo "❌ ERRO CRÍTICO: Nem 'DATABASE_URL' nem 'DB_HOST' foram definidos nos Secrets do repositório no GitHub!"
+            MISSING=1
+          fi
+          if [ $MISSING -eq 1 ]; then
+            echo "---------------------------------------------------------------------------------"
+            echo "👉 Para corrigir, acesse o repositório no GitHub:"
+            echo "   Settings > Secrets and variables > Actions > New repository secret"
+            echo "   E cadastre as seguintes chaves:"
+            echo "     - APP_KEY (ex: base64:...)"
+            echo "     - DATABASE_URL (ex: postgresql://usuario:senha@host:5432/nome_banco) OU"
+            echo "       (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD)"
+            echo "---------------------------------------------------------------------------------"
+            exit 1
+          fi
+
       - name: Notify Discord - Migrations Started
         env:
           APP_ENV: production
           APP_KEY: ${{ secrets.APP_KEY }}
-          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
-        run: php artisan discord:notify-migration started || true
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
+          DB_OPTIONS: ${{ secrets.DB_OPTIONS }}
+        run: |
+          export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+          export DB_PORT="${DB_PORT:-5432}"
+          export DB_SSLMODE="${DB_SSLMODE:-prefer}"
+          php artisan discord:notify-migration started || true
 
       - name: Run Database Migrations
         env:
           APP_ENV: production
           APP_KEY: ${{ secrets.APP_KEY }}
-          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
-        run: php artisan migrate --force
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
+          DB_OPTIONS: ${{ secrets.DB_OPTIONS }}
+        run: |
+          export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+          export DB_PORT="${DB_PORT:-5432}"
+          export DB_SSLMODE="${DB_SSLMODE:-prefer}"
+          php artisan migrate --force
 
       - name: Notify Discord - Migrations Success
         if: success()
         env:
           APP_ENV: production
           APP_KEY: ${{ secrets.APP_KEY }}
-          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
-        run: php artisan discord:notify-migration success || true
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
+          DB_OPTIONS: ${{ secrets.DB_OPTIONS }}
+        run: |
+          export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+          export DB_PORT="${DB_PORT:-5432}"
+          export DB_SSLMODE="${DB_SSLMODE:-prefer}"
+          php artisan discord:notify-migration success || true
 
       - name: Notify Discord - Migrations Failure
         if: failure()
         env:
           APP_ENV: production
           APP_KEY: ${{ secrets.APP_KEY }}
-          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'pgsql' }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT || '5432' }}
+          DB_PORT: ${{ secrets.DB_PORT }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SSLMODE: ${{ secrets.DB_SSLMODE || 'require' }}
-        run: php artisan discord:notify-migration failed --message="Ocorreu um erro durante a execução do comando php artisan migrate --force no GitHub Actions" || true
+          DB_SSLMODE: ${{ secrets.DB_SSLMODE }}
+          DB_OPTIONS: ${{ secrets.DB_OPTIONS }}
+        run: |
+          export DB_CONNECTION="${DB_CONNECTION:-pgsql}"
+          export DB_PORT="${DB_PORT:-5432}"
+          export DB_SSLMODE="${DB_SSLMODE:-prefer}"
+          php artisan discord:notify-migration failed --message="Ocorreu um erro durante a execução do comando php artisan migrate --force no GitHub Actions" || true
