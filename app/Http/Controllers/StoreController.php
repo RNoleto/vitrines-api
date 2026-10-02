@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class StoreController extends Controller
 {
@@ -425,15 +426,21 @@ class StoreController extends Controller
         return response()->json($store->append('logo_url'));
     }
 
-    public function showBySlug($slug)
+    public function showBySlug($slug, Request $request)
     {
         $store = Store::whereRaw('LOWER(slug) = LOWER(?)', [$slug])
             ->where('ativo', 1)
             ->with(['links', 'contacts', 'theme'])
             ->firstOrFail();
 
-        $store->increment('visits');
-        $store->update(['last_visited_at' => now()]);
+        $ip = $request->ip();
+        $cacheKey = "store_visit_{$store->id}_{$ip}";
+
+        if (!Cache::has($cacheKey)) {
+            Cache::put($cacheKey, true, now()->addMinutes(5));
+            $store->increment('visits');
+            $store->update(['last_visited_at' => now()]);
+        }
 
         return response()->json($store->append('logo_url'));
     }
@@ -450,7 +457,7 @@ class StoreController extends Controller
         return $slug;
     }
 
-    public function registerVisit($slug)
+    public function registerVisit($slug, Request $request)
     {
         $store = Store::where('slug', $slug)->first();
 
@@ -458,29 +465,43 @@ class StoreController extends Controller
             return response()->json(['error' => 'loja não encontrada'], 404);
         }
 
-        $store->increment('visits');
-        $store->last_visited_at = now();
-        $store->save();
+        $ip = $request->ip();
+        $cacheKey = "store_visit_{$store->id}_{$ip}";
 
-        return response()->json(['message' => 'Visita registrada com sucesso']);
+        if (!Cache::has($cacheKey)) {
+            Cache::put($cacheKey, true, now()->addMinutes(5));
+            $store->increment('visits');
+            $store->last_visited_at = now();
+            $store->save();
+            return response()->json(['message' => 'Visita registrada com sucesso']);
+        }
+
+        return response()->json(['message' => 'Visita recente já contabilizada']);
     }
 
-    public function registerLinkClick($id)
+    public function registerLinkClick($id, Request $request)
     {
         $link = StoreLink::find($id);
     
         if (!$link) {
             return response()->json(['error' => 'Link não encontrado'], 404);
         }
-    
-        $link->increment('visits');
-        $link->last_visited_at = now();
-        $link->save();
-    
-        return response()->json(['message' => 'Clique registrado com sucesso']);
+
+        $ip = $request->ip();
+        $cacheKey = "link_click_{$id}_{$ip}";
+
+        if (!Cache::has($cacheKey)) {
+            Cache::put($cacheKey, true, now()->addSeconds(10));
+            $link->increment('visits');
+            $link->last_visited_at = now();
+            $link->save();
+            return response()->json(['message' => 'Clique registrado com sucesso']);
+        }
+
+        return response()->json(['message' => 'Clique recente já contabilizado']);
     }
 
-    public function registerContactClick($storeId, $contactId)
+    public function registerContactClick($storeId, $contactId, Request $request)
     {
         $store = Store::find($storeId);
     
@@ -497,18 +518,24 @@ class StoreController extends Controller
         if (!$exists) {
             return response()->json(['error' => 'Contato não vinculado à loja'], 404);
         }
-    
-        // Atualiza os campos visits e last_visited_at
-        DB::table('contact_store')
-            ->where('store_id', $storeId)
-            ->where('contact_id', $contactId)
-            ->update([
-                'visits' => DB::raw('visits + 1'),
-                'last_visited_at' => now(),
-                'updated_at' => now()
-            ]);
-        
-        return response()->json(['message' => 'Clique no contato registrado com sucesso']);
+
+        $ip = $request->ip();
+        $cacheKey = "contact_click_{$storeId}_{$contactId}_{$ip}";
+
+        if (!Cache::has($cacheKey)) {
+            Cache::put($cacheKey, true, now()->addSeconds(10));
+            DB::table('contact_store')
+                ->where('store_id', $storeId)
+                ->where('contact_id', $contactId)
+                ->update([
+                    'visits' => DB::raw('visits + 1'),
+                    'last_visited_at' => now(),
+                    'updated_at' => now()
+                ]);
+            return response()->json(['message' => 'Clique no contato registrado com sucesso']);
+        }
+
+        return response()->json(['message' => 'Clique recente no contato já contabilizado']);
     }
 
 }

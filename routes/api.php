@@ -49,13 +49,16 @@ Route::middleware(FirebaseAuthenticate::class)->group(function(){
 
 // Rotas públicas para páginas externas
 
-//Lojas
+// Lojas
 Route::get('/lojas/{loja}', [StoreController::class, 'showBySlug'])->where('loja', '.*');
-// Route::get('/public/stores', [StoreController::class, 'publicList']);
 Route::get('/public/stores/{store:slug}', [StoreController::class, 'publicShow']);
-Route::post('/public/stores/{slug}/visit', [StoreController::class, 'registerVisit']);
-Route::post('/public/stores/links/{id}/click', [StoreController::class, 'registerLinkClick']);
-Route::post('/stores/{store}/contacts/{contact}/click', [StoreController::class, 'registerContactClick']);
+
+// Registros de Acesso com Throttle Anti-Flood
+Route::middleware('throttle:30,1')->group(function () {
+    Route::post('/public/stores/{slug}/visit', [StoreController::class, 'registerVisit']);
+    Route::post('/public/stores/links/{id}/click', [StoreController::class, 'registerLinkClick']);
+    Route::post('/stores/{store}/contacts/{contact}/click', [StoreController::class, 'registerContactClick']);
+});
 
 //Contatos
 // Route::get('/public/stores/{store}/contacts', [ContactController::class, 'publicByStore']);
