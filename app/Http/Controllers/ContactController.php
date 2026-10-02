@@ -103,11 +103,8 @@ class ContactController extends Controller
         
             $photoUrl = null;
             if ($request->hasFile('photo')) {
-                if (app()->environment('local') || !env('CLOUDINARY_URL')) {
-                    // Local fallback: Salva localmente no disco 'public'
-                    $path = $request->file('photo')->store('contacts', 'public');
-                    $photoUrl = $path;
-                } else {
+                $hasCloudinary = !empty(env('CLOUDINARY_URL')) || (!empty(env('CLOUDINARY_CLOUD_NAME')) && !empty(env('CLOUDINARY_KEY')));
+                if ($hasCloudinary) {
                     try {
                         $uploaded = Cloudinary::uploadApi()->upload(
                             $request->file('photo')->getRealPath(),
@@ -115,9 +112,14 @@ class ContactController extends Controller
                         );
                         $photoUrl = $uploaded['secure_url'];
                     } catch (\Exception $e) {
-                        \Log::error('Cloudinary error: ' . $e->getMessage());
-                        return response()->json(['error' => 'Erro no upload da imagem'], 500);
+                        \Log::error('Cloudinary contact photo store error: ' . $e->getMessage());
+                        $path = $request->file('photo')->store('contacts', 'public');
+                        $photoUrl = $path;
                     }
+                } else {
+                    // Local fallback: Salva localmente no disco 'public'
+                    $path = $request->file('photo')->store('contacts', 'public');
+                    $photoUrl = $path;
                 }
             }
         
@@ -249,11 +251,8 @@ class ContactController extends Controller
 
             // Atualiza foto
             if ($request->hasFile('photo')) {
-                if (app()->environment('local') || !env('CLOUDINARY_URL')) {
-                    // Local fallback: Salva localmente no disco 'public'
-                    $path = $request->file('photo')->store('contacts', 'public');
-                    $contact->photo = $path;
-                } else {
+                $hasCloudinary = !empty(env('CLOUDINARY_URL')) || (!empty(env('CLOUDINARY_CLOUD_NAME')) && !empty(env('CLOUDINARY_KEY')));
+                if ($hasCloudinary) {
                     try {
                         $uploaded = Cloudinary::uploadApi()->upload(
                             $request->file('photo')->getRealPath(),
@@ -261,9 +260,14 @@ class ContactController extends Controller
                         );
                         $contact->photo = $uploaded['secure_url'];
                     } catch (\Exception $e) {
-                        \Log::error('Cloudinary update error: ' . $e->getMessage());
-                        return response()->json(['error' => 'Erro ao enviar nova foto para o Cloudinary.'], 500);
+                        \Log::error('Cloudinary contact photo update error: ' . $e->getMessage());
+                        $path = $request->file('photo')->store('contacts', 'public');
+                        $contact->photo = $path;
                     }
+                } else {
+                    // Local fallback: Salva localmente no disco 'public'
+                    $path = $request->file('photo')->store('contacts', 'public');
+                    $contact->photo = $path;
                 }
             }
 

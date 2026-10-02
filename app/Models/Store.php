@@ -55,8 +55,8 @@ class Store extends Model
             return null;
         }
 
-        // Se a logo for uma URL do Cloudinary (ex: https://res.cloudinary.com/...)
-        if (Str::contains($this->logo, 'cloudinary.com')) {
+        // Se a logo for uma URL externa ou Cloudinary (ex: https://res.cloudinary.com/...)
+        if (Str::contains($this->logo, 'cloudinary.com') || (Str::startsWith($this->logo, 'http') && !Str::contains($this->logo, '127.0.0.1') && !Str::contains($this->logo, 'localhost'))) {
             return $this->logo;
         }
 
@@ -67,9 +67,15 @@ class Store extends Model
             $path = $matches[1];
         }
 
+        // Se for uma requisição HTTP ativa no servidor, usar o Host da requisição
+        if (request()->hasHeader('host')) {
+            $scheme = (request()->secure() || app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') ? 'https' : request()->getScheme();
+            $host = request()->header('host');
+            return "{$scheme}://{$host}/storage/{$path}";
+        }
+
         $url = asset("storage/{$path}");
 
-        // Se a requisição atual for HTTPS ou estiver em ambiente production / atrás de proxy SSL
         if (request()->secure() || app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
             $url = Str::replaceFirst('http://', 'https://', $url);
         }

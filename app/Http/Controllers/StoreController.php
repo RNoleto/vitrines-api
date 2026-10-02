@@ -77,17 +77,23 @@ class StoreController extends Controller
 
             $logoUrl = null;
             if ($request->hasFile('logo')) {
-                if (app()->environment('local') || !env('CLOUDINARY_URL')) {
+                $hasCloudinary = !empty(env('CLOUDINARY_URL')) || (!empty(env('CLOUDINARY_CLOUD_NAME')) && !empty(env('CLOUDINARY_KEY')));
+                if ($hasCloudinary) {
+                    try {
+                        $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath(), [
+                            'folder' => 'logos'
+                        ]);
+                        $logoUrl = $uploaded['secure_url'];
+                    } catch (\Exception $e) {
+                        \Log::error('Cloudinary logo store error: ' . $e->getMessage());
+                        // Fallback local se Cloudinary falhar
+                        $path = $request->file('logo')->store('logos', 'public');
+                        $logoUrl = $path;
+                    }
+                } else {
                     // Local fallback: Salva localmente no disco 'public'
                     $path = $request->file('logo')->store('logos', 'public');
                     $logoUrl = $path;
-                } else {
-                    try {
-                        $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
-                        $logoUrl = $uploaded['secure_url'];
-                    } catch (\Exception $e) {
-                        return response()->json(['error' => 'Erro ao enviar imagem para o Cloudinary.'], 500);
-                    }
                 }
             }          
 
@@ -220,17 +226,23 @@ class StoreController extends Controller
         ]);
 
         if ($request->hasFile('logo')) {
-            if (app()->environment('local') || !env('CLOUDINARY_URL')) {
+            $hasCloudinary = !empty(env('CLOUDINARY_URL')) || (!empty(env('CLOUDINARY_CLOUD_NAME')) && !empty(env('CLOUDINARY_KEY')));
+            if ($hasCloudinary) {
+                try {
+                    $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath(), [
+                        'folder' => 'logos'
+                    ]);
+                    $store->logo = $uploaded['secure_url'];
+                } catch (\Exception $e) {
+                    \Log::error('Cloudinary logo update error: ' . $e->getMessage());
+                    // Fallback local se Cloudinary falhar
+                    $path = $request->file('logo')->store('logos', 'public');
+                    $store->logo = $path;
+                }
+            } else {
                 // Local fallback: Salva localmente no disco 'public'
                 $path = $request->file('logo')->store('logos', 'public');
                 $store->logo = $path;
-            } else {
-                try {
-                    $uploaded = Cloudinary::uploadApi()->upload($request->file('logo')->getRealPath());
-                    $store->logo = $uploaded['secure_url'];
-                } catch (\Exception $e) {
-                    return response()->json(['error' => 'Erro ao enviar nova logo para o Cloudinary.'], 500);
-                }
             }
         }
 

@@ -31,7 +31,7 @@ class Contact extends Model
             return null;
         }
 
-        if (\Illuminate\Support\Str::contains($this->photo, 'cloudinary.com')) {
+        if (\Illuminate\Support\Str::contains($this->photo, 'cloudinary.com') || (\Illuminate\Support\Str::startsWith($this->photo, 'http') && !\Illuminate\Support\Str::contains($this->photo, '127.0.0.1') && !\Illuminate\Support\Str::contains($this->photo, 'localhost'))) {
             return $this->photo;
         }
 
@@ -39,6 +39,12 @@ class Contact extends Model
 
         if (preg_match('#storage/(.+)$#i', $path, $matches)) {
             $path = $matches[1];
+        }
+
+        if (request()->hasHeader('host')) {
+            $scheme = (request()->secure() || app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') ? 'https' : request()->getScheme();
+            $host = request()->header('host');
+            return "{$scheme}://{$host}/storage/{$path}";
         }
 
         $url = asset("storage/{$path}");
