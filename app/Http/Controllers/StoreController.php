@@ -246,10 +246,16 @@ class StoreController extends Controller
             }
         }
 
-        $store->update([
+        $updateData = [
             'name'  => $request->name ?? $store->name,
             'ativo' => $request->ativo ?? $store->ativo,
-        ]);
+        ];
+
+        if ($store->isDirty('logo')) {
+            $updateData['logo'] = $store->logo;
+        }
+
+        $store->update($updateData);
 
         if ($request->has('links')) {
             $store->links()->delete();
@@ -262,7 +268,7 @@ class StoreController extends Controller
             }
         }
 
-        return response()->json($store->load('links'));
+        return response()->json($store->load('links')->append('logo_url'));
     }
 
     public function destroy($id)
